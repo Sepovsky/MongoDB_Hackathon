@@ -3,6 +3,8 @@
 **Governed, evidence-preserving agent memory on MongoDB Atlas.**
 Track: *Memory You Can Govern*, Agents in Context Toronto (Nov 14, 2026). All code in this repo was written during the hackathon.
 
+**[Open the public demo](https://memorydelta-demo.sepovsky.chatgpt.site)** to replay the saved MongoDB Atlas runs and explore the benchmark results.
+
 > A saved calculation is valid for a site, a framework and a year. MemoryDelta is agent memory that knows which rule it was built for.
 
 A sustainability analyst agent answers *"What are our Scope 2 emissions from purchased electricity for FY2025-26?"*
