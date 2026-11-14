@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MemoryDelta · memory flow</title>
+<style>
+  :root {
+    --bg: #001e2b; --panel: #0b2f3e; --panel2: #0f3a4b; --line: #1d5466;
+    --text: #e8f1f4; --muted: #8fb1bd; --green: #00ed64; --green-dim: #0b6b3a;
+    --red: #ff6b6b; --red-dim: #5a1f27; --amber: #ffc53d; --grey: #5c7c88;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+  header h1 span { color: var(--green); }
+  .tagline { color: var(--muted); font-size: 13px; }
+  .chips { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .chip b { color: var(--text); font-weight: 600; }
+  .chip.live b { color: var(--green); }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line);
+           background: var(--panel2); color: var(--text); padding: 7px 13px; }
+  button:hover { border-color: var(--green); }
+  button.primary { background: var(--green); color: #001e2b; border-color: var(--green); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: wait; }
+  nav { display: flex; gap: 6px; padding: 12px 24px 0; flex-wrap: wrap; }
+  nav button { background: transparent; border-color: transparent; color: var(--muted); padding: 8px 12px; }
+  nav button.active { background: var(--panel); border-color: var(--line); color: var(--text); }
+  main { padding: 16px 24px 32px; max-width: 1500px; }
+  .scene-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; flex-wrap: wrap; }
+  .scene-head h2 { margin: 0; font-size: 24px; }
+  .question { color: var(--muted); }
+  .question q { color: var(--text); }
+  .setup { color: var(--amber); font-size: 14px; margin: 4px 0 14px; min-height: 1em; }
+  .stage-labels, .lane-grid { display: grid; grid-template-columns: 210px repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .stage-labels div { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 4px; }
+  .lane { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .lane.bad { border-color: #6b2c35; }
+  .lane-title { font-weight: 600; align-self: center; }
+  .lane-title small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+  .lane.bad .lane-title { color: var(--red); }
+  .stage { position: relative; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px;
+           padding: 9px 10px; min-height: 84px; opacity: .14; transform: translateY(4px);
+           transition: opacity .35s ease, transform .35s ease, border-color .35s; font-size: 13px; }
+  .stage.lit { opacity: 1; transform: none; }
+  .stage:not(:last-child)::after { content: "→"; position: absolute; right: -10px; top: 50%; transform: translate(50%, -50%);
+           color: var(--muted); font-size: 16px; z-index: 1; }
+  .stage .k { color: var(--muted); font-size: 12px; }
+  .pill { display: inline-block; margin: 2px 3px 2px 0; padding: 2px 8px; border-radius: 6px; font-size: 12px;
+          border: 1px solid var(--line); background: #0a2a37; word-break: break-word; }
+  .pill.ok { border-color: var(--green-dim); color: var(--green); background: #06301f; }
+  .pill.no { border-color: #6b2c35; color: var(--red); background: var(--red-dim); }
+  .pill.off { border-color: var(--grey); color: #b9cdd4; background: #22414c; }
+  .pill.leak { border-color: var(--red); color: #fff; background: #a3263a; font-weight: 600; }
+  .tool { display: block; margin: 2px 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+          white-space: normal; overflow-wrap: anywhere; }
+  .tool .n { color: var(--green); }
+  .tool.err .n { color: var(--red); }
+  .tool .r { color: var(--amber); }
+  .answer { font-size: 34px; font-weight: 700; line-height: 1.1; }
+  .answer.good { color: var(--green); }
+  .answer.bad { color: var(--red); }
+  .verdict { font-size: 12px; margin-top: 3px; }
+  .lock { color: var(--green); }
+  .insight { display: flex; gap: 18px; margin-top: 16px; flex-wrap: wrap; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; flex: 1 1 320px; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .card p { margin: 0; font-size: 16px; }
+  .card p b { color: var(--green); }
+  .bars { display: grid; grid-template-columns: 140px 1fr 70px; gap: 8px 10px; align-items: center; font-size: 13px; }
+  .bar { height: 16px; border-radius: 4px; background: var(--grey); width: 0; transition: width .8s ease; }
+  .bar.g { background: var(--green); }
+  .controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  .status { color: var(--muted); font-size: 13px; }
+  .empty { padding: 40px; color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 18px; }
+  @media (max-width: 1100px) { .stage-labels { display: none; } .lane-grid { grid-template-columns: 1fr; }
+    .stage:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -14px; transform: translateX(50%); } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Memory<span>Delta</span></h1>
+    <div class="tagline">What happens to a memory before it can steer the agent</div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="controls">
+    <span class="status" id="status"></span>
+    <button id="replay" title="Space">▶ Replay</button>
+    <button id="runlive" class="primary" title="Reseeds the demo database and reruns every scene">Run live on Atlas</button>
+  </div>
+</header>
+<nav id="tabs"></nav>
+<main id="main"><div class="empty">Loading results…</div></main>
+
+<script>
+const TASK = "How many active customers did we have in October 2026?";
+const STAGES = ["Who asks", "Vector Search", "Validation gate", "Sent to the model", "Agent actions", "Verified answer"];
+
+const REASON_TEXT = (r) => {
+  if (r === "tenant_mismatch") return "belongs to another tenant";
+  if (r === "user_not_allowed") return "user not allowed";
+  if (r === "status_superseded") return "superseded by a newer version";
+  if (r === "status_revoked") return "revoked";
+  if (r === "expired") return "expired";
+  if (r === "evidence_incomplete") return "missing evidence";
+  const m = /policy_version_mismatch\(memory=v(\d+), current=v(\d+)\)/.exec(r || "");
+  if (m) return `built on policy v${m[1]}, current is v${m[2]}`;
+  return r;
+};
+
+const SCENES = [
+  { id: "isolation", tab: "1 · Isolation", title: "Tenant isolation",
+    setup: "Three companies ask the same question. Tenant identity comes from the login session, never from the prompt.",
+    lanes: s => [
+      { label: "Without scoping", sub: "baseline: no tenant filter, no gate", run: s.isolation.unscoped_baseline, tenant: "acme", expected: 120 },
+      { label: "MemoryDelta · acme", run: s.isolation.acme, tenant: "acme", expected: 120 },
+      { label: "MemoryDelta · globex", run: s.isolation.globex, tenant: "globex", expected: 41 },
+      { label: "MemoryDelta · initech", sub: "has no memories yet", run: s.isolation.initech, tenant: "initech", expected: 25 },
+    ],
+    insight: s => {
+      const leak = s.isolation.foreign_in_baseline;
+      return [["Foreign memories reaching the model", `Baseline: <b style="color:var(--red)">${leak}</b> &nbsp;·&nbsp; MemoryDelta: <b>0</b>`],
+              ["Why", "Vector Search filters by the session's tenant, then every candidate is re-read from Atlas and checked in code before the prompt is built."]];
+    } },
+  { id: "behavior", tab: "2 · Behavior", title: "Does memory change what the agent does?",
+    setup: "Same task, model, settings and data. The only difference: whether the approved memory is provided.",
+    lanes: s => [
+      { label: "No memory", run: s.behavior.no_memory, tenant: "acme", expected: 120 },
+      { label: "Approved memory", run: s.behavior.memory, tenant: "acme", expected: 120 },
+    ],
+    insight: s => {
+      const a = s.behavior.no_memory.tool_calls.length, b = s.behavior.memory.tool_calls.length;
+      return [["Tool calls", `No memory: <b style="color:var(--text)">${a}</b> &nbsp;→&nbsp; with memory: <b>${b}</b>, same answer`],
+              ["What changed", "With memory the agent skips policy and schema discovery and runs the verified query directly. The actions changed, not just the prompt."]];
+    } },
+  { id: "policy", tab: "3 · Policy change", title: "The rules changed. The memory didn't.",
+    setup: "Admin changes acme's definition of “active”: v1 any order → v2 paid, non-refunded order. Correct answer is now 93.",
+    lanes: s => [
+      { label: "Without the gate", sub: "reuses the most similar memory", run: s.policy_change.ungated, tenant: "acme", expected: 93 },
+      { label: "MemoryDelta", run: s.policy_change.governed, tenant: "acme", expected: 93 },
+    ],
+    insight: () => [["The key moment", "Both found the same memory. <b>Only one knew not to trust it.</b>"],
+                    ["How", "Each memory records the policy version it was built on. The gate compares it with the live policy in Atlas before the memory can reach the model."]] },
+  { id: "correction", tab: "4 · Correction", title: "Correct the memory",
+    setup: "correct_memory checks the new filter against the active policy, re-runs it on real data, writes v2, marks v1 superseded and records a delta.",
+    lanes: s => [{ label: "Next run", run: s.correction, tenant: "acme", expected: 93 }],
+    insight: () => [["Result", "Only <b>v2</b> reaches the model. v1 stays in Atlas for audit but is blocked as superseded."]] },
+  { id: "revocation", tab: "5 · Revocation", title: "Forget the memory",
+    setup: "revoke_memory marks every version revoked and removes its embedding and content. Metadata stays for audit.",
+    lanes: s => [{ label: "Next run", run: s.revocation, tenant: "acme", expected: 93 }],
+    insight: () => [["Result", "<b>Neither version</b> reaches the model, and the agent still answers by working it out fresh."],
+                    ["Index lag", "If Vector Search briefly still returns a revoked memory, the re-read from Atlas blocks it."]] },
+  { id: "compression", tab: "6 · Compression", title: "Raw history vs evidence-preserving memory",
+    setup: "Same authorized evidence, same model and rules. Only the memory's representation changes.",
+    lanes: s => [
+      { label: "Raw trajectory", run: s.compression["raw trajectory"], tenant: "acme", expected: 93 },
+      { label: "Compact memory", run: s.compression["compact"], tenant: "acme", expected: 93 },
+    ],
+    insight: s => {
+      const raw = s.compression["raw trajectory"], c = s.compression["compact"];
+      const max = Math.max(raw.first_input_tokens, c.first_input_tokens);
+      const src = raw.token_source === "api_usage" ? "actual API count" : "estimate";
+      return [["Request input tokens (" + src + ")", `<div class="bars">
+        <span>Raw trajectory</span><div class="bar" data-w="${100 * raw.first_input_tokens / max}"></div><span>${raw.first_input_tokens}</span>
+        <span>Compact</span><div class="bar g" data-w="${100 * c.first_input_tokens / max}"></div><span>${c.first_input_tokens}</span></div>`],
+        ["Evidence kept", `Both chose the expected action: ${raw.expected_action && c.expected_action ? "<b>yes</b>" : "no"}. Evidence pointers resolve in Atlas: ${c.pointers_resolve ? "<b>yes</b>" : "no"} <span class='k'>(${(c.pointers || []).join(", ")})</span>`]];
+    } },
+];
+
+let data = null, current = 0, timers = [];
+
+const esc = (x) => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtFilter = (f) => JSON.stringify(f);
+const memLabel = (m) => `${m.memory_id.replace("mem_", "").replace("_active_customers", "")}@v${m.version}`;
+
+function laneHTML(L) {
+  const r = L.run, mode = r.memory_mode;
+  const foreign = r.included.filter(m => !m.memory_id.includes(L.tenant));
+  const answer = r.decision ? r.decision.active_customers : null;
+  const correct = answer === L.expected && foreign.length === 0;
+  const bad = !correct;
+
+  const who = `<div class="k">tenant</div><b>${esc(r.tenant_id)}</b><div class="k"><span class="lock">🔒</span> from login session</div>`;
+
+  const candN = r.candidates ?? (r.included.length + r.rejected.length);
+  const search = mode === "none" ? `<span class="pill off">memory off</span><div class="k">no search</div>`
+    : mode === "provided" ? `<span class="pill off">no search</span><div class="k">same evidence handed in directly</div>`
+    : `<div class="k">${mode === "unscoped" ? "searched <b style='color:var(--red)'>all tenants</b>" : `searched <b>${esc(r.tenant_id)}</b> only`}</div>
+       <div><b>${candN}</b> candidate${candN === 1 ? "" : "s"}</div>`;
+
+  let gate;
+  if (mode === "none") gate = `<span class="k">nothing to check</span>`;
+  else if (mode === "provided") gate = `<span class="pill ok">✓ from acme's own authorized v2 run</span>`;
+  else if (mode === "governed") {
+    gate = r.rejected.map(x => `<span class="pill no">✕ ${esc(memLabel(x))}: ${esc(REASON_TEXT(x.reason))}</span>`).join("")
+         + r.included.map(m => `<span class="pill ok">✓ ${esc(memLabel(m))}: eligible</span>`).join("")
+         || `<span class="k">no candidates</span>`;
+  } else gate = `<span class="pill off">gate OFF</span><div class="k">everything retrieved passes</div>`;
+
+  const sent = r.included.length
+    ? r.included.map(m => foreign.includes(m) ? `<span class="pill leak">LEAK · ${esc(memLabel(m))}</span>`
+                                              : `<span class="pill ${mode === "governed" || mode === "provided" ? "ok" : "off"}">${esc(memLabel(m))}</span>`).join("")
+    : `<span class="k">no memory</span>`;
+
+  const tools = r.tool_calls.map(c => {
+    let extra = "";
+    if (c.name === "run_count_query") extra = ` ${esc(fmtFilter(c.input.filter))}${c.output && c.output.active_customers != null ? ` <span class="r">→ ${c.output.active_customers}</span>` : ""}`;
+    if (c.name === "get_policy" && c.output && c.output.version) extra = ` <span class="r">→ v${c.output.version}</span>`;
+    return `<span class="tool ${c.ok ? "" : "err"}"><span class="n">${esc(c.name)}</span>${extra}${c.ok ? "" : " ✕"}</span>`;
+  }).join("") || `<span class="k">none</span>`;
+
+  const ev = r.decision_evidence || {};
+  const why = foreign.length ? "answer built with another tenant's memory in the prompt"
+            : answer !== L.expected ? `stale: expected ${L.expected}` : "matches the executed query";
+  const ans = `<div class="answer ${correct ? "good" : "bad"}">${answer ?? "—"} ${correct ? "✓" : "✕"}</div>
+    <div class="verdict" style="color:${correct ? "var(--muted)" : "var(--red)"}">${esc(why)}</div>
+    ${ev.policy_version_source ? `<div class="k">policy v${ev.policy_version} from ${esc(ev.policy_version_source.replace("memory:mem_", "memory ").replace("_active_customers", ""))}</div>` : ""}`;
+
+  return `<div class="lane ${bad ? "bad" : ""}"><div class="lane-grid">
+    <div class="lane-title">${esc(L.label)}${L.sub ? `<small>${esc(L.sub)}</small>` : ""}</div>
+    ${[who, search, gate, sent, tools, ans].map(h => `<div class="stage">${h}</div>`).join("")}
+  </div></div>`;
+}
+
+function render() {
+  const S = SCENES[current], s = data.scenes;
+  document.querySelectorAll("nav button").forEach((b, i) => b.classList.toggle("active", i === current));
+  const insight = (S.insight ? S.insight(s) : []).map(([h, p]) => `<div class="card"><h3>${h}</h3><p>${p}</p></div>`).join("");
+  document.getElementById("main").innerHTML = `
+    <div class="scene-head"><h2>${S.title}</h2><div class="question">Question: <q>${TASK}</q></div></div>
+    <div class="setup">${S.setup}</div>
+    <div class="stage-labels"><div></div>${STAGES.map(x => `<div>${x}</div>`).join("")}</div>
+    ${S.lanes(s).map(laneHTML).join("")}
+    <div class="insight">${insight}</div>
+    <div class="hint">← → switch scenes · Space replays · data: results/comparison.json from the last run</div>`;
+  play();
+}
+
+function play() {
+  timers.forEach(clearTimeout); timers = [];
+  const lanes = [...document.querySelectorAll(".lane")];
+  lanes.forEach(l => l.querySelectorAll(".stage").forEach(st => st.classList.remove("lit")));
+  document.querySelectorAll(".bar").forEach(b => b.style.width = "0");
+  for (let i = 0; i < STAGES.length; i++) {
+    timers.push(setTimeout(() => lanes.forEach(l => l.querySelectorAll(".stage")[i]?.classList.add("lit")), 250 + i * 650));
+  }
+  timers.push(setTimeout(() => document.querySelectorAll(".bar").forEach(b => b.style.width = b.dataset.w + "%"),
+                         250 + STAGES.length * 650));
+}
+
+function chips() {
+  const atlas = data.database_mode === "atlas";
+  document.getElementById("chips").innerHTML = `
+    <span class="chip ${atlas ? "live" : ""}">database <b>${atlas ? "MongoDB Atlas" : "local (offline)"}</b></span>
+    <span class="chip ${data.model_live ? "live" : ""}">model <b>${esc(data.model)}</b>${data.model_live ? "" : " (scripted)"}</span>
+    <span class="chip">embeddings <b>${esc(data.embedder.split(" ")[0])}</b></span>`;
+}
+
+async function load() {
+  const res = await fetch("/api/results", { cache: "no-store" });
+  if (!res.ok) { document.getElementById("main").innerHTML = `<div class="empty">No results yet. Click “Run live on Atlas”.</div>`; return; }
+  data = await res.json();
+  chips();
+  render();
+}
+
+async function runLive() {
+  const btn = document.getElementById("runlive"), st = document.getElementById("status");
+  btn.disabled = true;
+  const r = await fetch("/api/run", { method: "POST" });
+  if (r.status !== 202 && r.status !== 409) { st.textContent = "could not start"; btn.disabled = false; return; }
+  const t0 = Date.now();
+  const poll = setInterval(async () => {
+    const s = await (await fetch("/api/status", { cache: "no-store" })).json();
+    st.textContent = s.running ? `running live on Atlas… ${Math.round((Date.now() - t0) / 1000)}s` : "";
+    if (!s.running) {
+      clearInterval(poll); btn.disabled = false;
+      st.textContent = s.exit_code === 0 ? "fresh results loaded" : `demo failed (exit ${s.exit_code}); see results/demo_live.txt`;
+      await load();
+    }
+  }, 2000);
+}
+
+document.getElementById("tabs").innerHTML = SCENES.map((S, i) => `<button data-i="${i}">${S.tab}</button>`).join("");
+document.getElementById("tabs").addEventListener("click", e => { if (e.target.dataset.i) { current = +e.target.dataset.i; render(); } });
+document.getElementById("replay").addEventListener("click", play);
+document.getElementById("runlive").addEventListener("click", runLive);
+document.addEventListener("keydown", e => {
+  if (!data) return;
+  if (e.key === "ArrowRight") { current = Math.min(SCENES.length - 1, current + 1); render(); }
+  if (e.key === "ArrowLeft") { current = Math.max(0, current - 1); render(); }
+  if (e.key === " ") { e.preventDefault(); play(); }
+});
+load();
+</script>
+</body>
+</html>

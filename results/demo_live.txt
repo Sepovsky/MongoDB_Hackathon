@@ -1,0 +1,70 @@
+─────────────────────────────────────────────────────────────────────── MemoryDelta demo ───────────────────────────────────────────────────────────────────────
+database: Atlas · db=memorydelta_demo · embedder=voyage-3.5 (1024-d) via https://ai.mongodb.com/v1
+model: glm-4.6 (LIVE)
+seeded 258 orders, 4 policies, 2 memories into database 'memorydelta_demo'
+───────────────────────────────────────────── 1 · Tenant isolation (tenant comes from the session, not the prompt) ─────────────────────────────────────────────
+governed retrieval vs unscoped baseline                                                                                                                         
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ who / arm                            ┃ memory sent to model                    ┃ blocked (reason) ┃ tool calls executed                     ┃ answer ┃ check ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ acme/ana · governed                  │ mem_acme_active_customers@v1            │ —                │ run_count_query → submit_answer         │ 120    │ ✓     │
+├──────────────────────────────────────┼─────────────────────────────────────────┼──────────────────┼─────────────────────────────────────────┼────────┼───────┤
+│ globex/gus · governed                │ mem_globex_active_customers@v1          │ —                │ run_count_query → submit_answer         │ 41     │ ✓     │
+├──────────────────────────────────────┼─────────────────────────────────────────┼──────────────────┼─────────────────────────────────────────┼────────┼───────┤
+│ initech/ivy · governed (no memories) │ —                                       │ —                │ get_policy → inspect_collection →       │ 25     │ ✓     │
+│                                      │                                         │                  │ run_count_query → submit_answer         │        │       │
+├──────────────────────────────────────┼─────────────────────────────────────────┼──────────────────┼─────────────────────────────────────────┼────────┼───────┤
+│ acme/ana · UNSCOPED baseline         │ mem_acme_active_customers@v1,           │ —                │ get_policy → inspect_collection →       │ 120    │ ✗     │
+│                                      │ mem_globex_active_customers@v1          │                  │ run_count_query → submit_answer         │        │       │
+└──────────────────────────────────────┴─────────────────────────────────────────┴──────────────────┴─────────────────────────────────────────┴────────┴───────┘
+unscoped baseline sent 1 foreign memory to the model; governed runs sent 0.
+───────────────────────────────────────────────────── 2 · Does approved memory change what the agent does? ─────────────────────────────────────────────────────
+expected before running (same task, model, settings and data; only memory differs):
+  none      → discovers first (get_policy / inspect_collection) before counting
+  governed  → first action is run_count_query with the memory's verified filter {}
+observed                                                                                                                                                        
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ who / arm              ┃ memory sent to model         ┃ blocked (reason) ┃ tool calls executed                                              ┃ answer ┃ check ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ acme · no memory       │ —                            │ —                │ get_policy → inspect_collection → run_count_query →              │ 120    │ ✓     │
+│                        │                              │                  │ submit_answer                                                    │        │       │
+├────────────────────────┼──────────────────────────────┼──────────────────┼──────────────────────────────────────────────────────────────────┼────────┼───────┤
+│ acme · approved memory │ mem_acme_active_customers@v1 │ —                │ run_count_query → submit_answer                                  │ 120    │ ✓     │
+└────────────────────────┴──────────────────────────────┴──────────────────┴──────────────────────────────────────────────────────────────────┴────────┴───────┘
+tool calls: no memory=4 vs memory=2 · same answer: True
+─────────────────────────────────────────────── 3 · Policy changes v1 → v2: the most similar memory is now stale ───────────────────────────────────────────────
+same question, after the authorized policy update (correct answer: 93)                                                                                          
+┏━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ who / arm               ┃ memory sent to model         ┃ blocked (reason)                        ┃ tool calls executed                      ┃ answer ┃ check ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ acme · UNGATED baseline │ mem_acme_active_customers@v1 │ —                                       │ run_count_query → submit_answer          │ 120    │ ✗     │
+├─────────────────────────┼──────────────────────────────┼─────────────────────────────────────────┼──────────────────────────────────────────┼────────┼───────┤
+│ acme · MemoryDelta gate │ —                            │ mem_acme_active_customers@v1:           │ get_policy → inspect_collection →        │ 93     │ ✓     │
+│                         │                              │ policy_version_mismatch(memory=v1,      │ run_count_query → submit_answer          │        │       │
+│                         │                              │ current=v2)                             │                                          │        │       │
+└─────────────────────────┴──────────────────────────────┴─────────────────────────────────────────┴──────────────────────────────────────────┴────────┴───────┘
+────────────────────────────────────────────── 4 · Correct the memory (new verified version; old one superseded) ───────────────────────────────────────────────
+next run after correction                                                                                                                              
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ who / arm       ┃ memory sent to model         ┃ blocked (reason)                                ┃ tool calls executed             ┃ answer ┃ check ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ acme · governed │ mem_acme_active_customers@v2 │ mem_acme_active_customers@v1: status_superseded │ run_count_query → submit_answer │ 93     │ ✓     │
+└─────────────────┴──────────────────────────────┴─────────────────────────────────────────────────┴─────────────────────────────────┴────────┴───────┘
+─────────────────────────────────────── 5 · Revoke the memory (excluded from future runs; embedding + content scrubbed) ────────────────────────────────────────
+next run after revoking 2 version(s)                                                                                                                            
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+┃ who / arm       ┃ memory sent to model ┃ blocked (reason)                                ┃ tool calls executed                              ┃ answer ┃ check ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+│ acme · governed │ —                    │ mem_acme_active_customers@v2: status_revoked,   │ get_policy → inspect_collection →                │ 93     │ ✓     │
+│                 │                      │ mem_acme_active_customers@v1: status_revoked    │ run_count_query → submit_answer                  │        │       │
+└─────────────────┴──────────────────────┴─────────────────────────────────────────────────┴──────────────────────────────────────────────────┴────────┴───────┘
+if Vector Search still returns a revoked id (index lag), the _id re-read blocks it with status_revoked
+──────────────────────────────────────── 6 · Compression: raw trajectory vs evidence-preserving memory (same evidence) ─────────────────────────────────────────
+same model, task, data and governance; only the memory representation differs                                                                          
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ representation ┃ memory tokens (est.) ┃ request input tokens ┃ expected action? ┃ answer ┃ evidence pointers resolve?                               ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ raw trajectory │ 411                  │ 1267 (actual)        │ ✓                │ 93     │ ✓ ['pol_acme_active_customers_v2']                       │
+│ compact        │ 122                  │ 788 (actual)         │ ✓                │ 93     │ ✓ ['pol_acme_active_customers_v2', 'run:run_8284efd2be'] │
+└────────────────┴──────────────────────┴──────────────────────┴──────────────────┴────────┴──────────────────────────────────────────────────────────┘
+───────────────────────────────────── done · results/comparison.json written · every run is also in the `runs` collection ──────────────────────────────────────

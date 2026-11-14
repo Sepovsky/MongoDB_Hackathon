@@ -1,0 +1,925 @@
+{
+  "database_mode": "atlas",
+  "embedder": "voyage-3.5 (1024-d) via https://ai.mongodb.com/v1",
+  "model": "glm-4.6",
+  "model_live": true,
+  "scenes": {
+    "isolation": {
+      "acme": {
+        "run_id": "run_54526f8290",
+        "tenant_id": "acme",
+        "memory_mode": "governed",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers@v1",
+            "memory_id": "mem_acme_active_customers",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 1,
+        "decision": {
+          "active_customers": 120,
+          "filter_used": {},
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 120,
+          "policy_version": 1,
+          "policy_version_source": "memory:mem_acme_active_customers",
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ]
+        },
+        "first_input_tokens": 765,
+        "total_input_tokens": 1612,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 120
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 120,
+              "filter_used": {},
+              "memory_ids_used": [
+                "mem_acme_active_customers"
+              ],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "globex": {
+        "run_id": "run_1e440dd4cd",
+        "tenant_id": "globex",
+        "memory_mode": "governed",
+        "included": [
+          {
+            "_id": "mem_globex_active_customers@v1",
+            "memory_id": "mem_globex_active_customers",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 1,
+        "decision": {
+          "active_customers": 41,
+          "filter_used": {
+            "total": {
+              "$gte": 100
+            }
+          },
+          "memory_ids_used": [
+            "mem_globex_active_customers"
+          ],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {
+            "total": {
+              "$gte": 100
+            }
+          },
+          "active_customers": 41,
+          "policy_version": 1,
+          "policy_version_source": "memory:mem_globex_active_customers",
+          "memory_ids_used": [
+            "mem_globex_active_customers"
+          ]
+        },
+        "first_input_tokens": 781,
+        "total_input_tokens": 1650,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {
+                "total": {
+                  "$gte": 100
+                }
+              }
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 41
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 41,
+              "filter_used": {
+                "total": {
+                  "$gte": 100
+                }
+              },
+              "memory_ids_used": [
+                "mem_globex_active_customers"
+              ],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "initech": {
+        "run_id": "run_ab955b7c09",
+        "tenant_id": "initech",
+        "memory_mode": "governed",
+        "included": [],
+        "rejected": [],
+        "candidates": 0,
+        "decision": {
+          "active_customers": 25,
+          "filter_used": {},
+          "memory_ids_used": [],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 25,
+          "policy_version": 1,
+          "policy_version_source": "get_policy",
+          "memory_ids_used": []
+        },
+        "first_input_tokens": 615,
+        "total_input_tokens": 2488,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "get_policy",
+            "input": {
+              "metric": "active_customers"
+            },
+            "ok": true,
+            "output": {
+              "policy_id": "pol_initech_active_customers_v1",
+              "version": 1
+            }
+          },
+          {
+            "name": "inspect_collection",
+            "input": {
+              "collection": "orders"
+            },
+            "ok": true,
+            "output": {}
+          },
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 25
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 25,
+              "filter_used": {},
+              "memory_ids_used": [],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "unscoped_baseline": {
+        "run_id": "run_2c32ee2bb3",
+        "tenant_id": "acme",
+        "memory_mode": "unscoped",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers@v1",
+            "memory_id": "mem_acme_active_customers",
+            "version": 1
+          },
+          {
+            "_id": "mem_globex_active_customers@v1",
+            "memory_id": "mem_globex_active_customers",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 2,
+        "decision": {
+          "active_customers": 120,
+          "filter_used": {},
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 120,
+          "policy_version": 1,
+          "policy_version_source": "get_policy",
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ]
+        },
+        "first_input_tokens": 939,
+        "total_input_tokens": 3581,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "get_policy",
+            "input": {
+              "metric": "active_customers"
+            },
+            "ok": true,
+            "output": {
+              "policy_id": "pol_acme_active_customers_v1",
+              "version": 1
+            }
+          },
+          {
+            "name": "inspect_collection",
+            "input": {
+              "collection": "orders"
+            },
+            "ok": true,
+            "output": {}
+          },
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 120
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 120,
+              "filter_used": {},
+              "memory_ids_used": [
+                "mem_acme_active_customers"
+              ],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "foreign_in_baseline": 1
+    },
+    "behavior": {
+      "expected": {
+        "none": "discovers first (get_policy / inspect_collection) before counting",
+        "governed": "first action is run_count_query with the memory's verified filter {}"
+      },
+      "no_memory": {
+        "run_id": "run_1b07b97a64",
+        "tenant_id": "acme",
+        "memory_mode": "none",
+        "included": [],
+        "rejected": [],
+        "candidates": 0,
+        "decision": {
+          "active_customers": 120,
+          "filter_used": {},
+          "memory_ids_used": [],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 120,
+          "policy_version": 1,
+          "policy_version_source": "get_policy",
+          "memory_ids_used": []
+        },
+        "first_input_tokens": 615,
+        "total_input_tokens": 2474,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "get_policy",
+            "input": {
+              "metric": "active_customers"
+            },
+            "ok": true,
+            "output": {
+              "policy_id": "pol_acme_active_customers_v1",
+              "version": 1
+            }
+          },
+          {
+            "name": "inspect_collection",
+            "input": {
+              "collection": "orders"
+            },
+            "ok": true,
+            "output": {}
+          },
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 120
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 120,
+              "filter_used": {},
+              "memory_ids_used": [],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "memory": {
+        "run_id": "run_2726eb5644",
+        "tenant_id": "acme",
+        "memory_mode": "governed",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers@v1",
+            "memory_id": "mem_acme_active_customers",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 1,
+        "decision": {
+          "active_customers": 120,
+          "filter_used": {},
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 120,
+          "policy_version": 1,
+          "policy_version_source": "memory:mem_acme_active_customers",
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ]
+        },
+        "first_input_tokens": 765,
+        "total_input_tokens": 1617,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 120
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 120,
+              "filter_used": {},
+              "memory_ids_used": [
+                "mem_acme_active_customers"
+              ],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "matched_expected": {
+        "no_memory": true,
+        "memory": true
+      }
+    },
+    "policy_change": {
+      "ungated": {
+        "run_id": "run_c6dc53c234",
+        "tenant_id": "acme",
+        "memory_mode": "ungated",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers@v1",
+            "memory_id": "mem_acme_active_customers",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 1,
+        "decision": {
+          "active_customers": 120,
+          "filter_used": {},
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ],
+          "policy_version": 1
+        },
+        "decision_evidence": {
+          "filter": {},
+          "active_customers": 120,
+          "policy_version": 1,
+          "policy_version_source": "memory:mem_acme_active_customers",
+          "memory_ids_used": [
+            "mem_acme_active_customers"
+          ]
+        },
+        "first_input_tokens": 765,
+        "total_input_tokens": 1598,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {}
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 120
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 120,
+              "filter_used": {},
+              "memory_ids_used": [
+                "mem_acme_active_customers"
+              ],
+              "policy_version": 1
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      },
+      "governed": {
+        "run_id": "run_8284efd2be",
+        "tenant_id": "acme",
+        "memory_mode": "governed",
+        "included": [],
+        "rejected": [
+          {
+            "_id": "mem_acme_active_customers@v1",
+            "memory_id": "mem_acme_active_customers",
+            "version": 1,
+            "reason": "policy_version_mismatch(memory=v1, current=v2)"
+          }
+        ],
+        "candidates": 1,
+        "decision": {
+          "active_customers": 93,
+          "filter_used": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "memory_ids_used": [],
+          "policy_version": 2
+        },
+        "decision_evidence": {
+          "filter": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "active_customers": 93,
+          "policy_version": 2,
+          "policy_version_source": "get_policy",
+          "memory_ids_used": []
+        },
+        "first_input_tokens": 615,
+        "total_input_tokens": 2546,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "get_policy",
+            "input": {
+              "metric": "active_customers"
+            },
+            "ok": true,
+            "output": {
+              "policy_id": "pol_acme_active_customers_v2",
+              "version": 2
+            }
+          },
+          {
+            "name": "inspect_collection",
+            "input": {
+              "collection": "orders"
+            },
+            "ok": true,
+            "output": {}
+          },
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {
+                "refunded": false,
+                "status": "paid"
+              }
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 93
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 93,
+              "filter_used": {
+                "refunded": false,
+                "status": "paid"
+              },
+              "memory_ids_used": [],
+              "policy_version": 2
+            },
+            "ok": true,
+            "output": {}
+          }
+        ]
+      }
+    },
+    "correction": {
+      "run_id": "run_0aa0b0f66f",
+      "tenant_id": "acme",
+      "memory_mode": "governed",
+      "included": [
+        {
+          "_id": "mem_acme_active_customers@v2",
+          "memory_id": "mem_acme_active_customers",
+          "version": 2
+        }
+      ],
+      "rejected": [
+        {
+          "_id": "mem_acme_active_customers@v1",
+          "memory_id": "mem_acme_active_customers",
+          "version": 1,
+          "reason": "status_superseded"
+        }
+      ],
+      "candidates": 2,
+      "decision": {
+        "active_customers": 93,
+        "filter_used": {
+          "refunded": false,
+          "status": "paid"
+        },
+        "memory_ids_used": [
+          "mem_acme_active_customers"
+        ],
+        "policy_version": 2
+      },
+      "decision_evidence": {
+        "filter": {
+          "refunded": false,
+          "status": "paid"
+        },
+        "active_customers": 93,
+        "policy_version": 2,
+        "policy_version_source": "memory:mem_acme_active_customers",
+        "memory_ids_used": [
+          "mem_acme_active_customers"
+        ]
+      },
+      "first_input_tokens": 789,
+      "total_input_tokens": 1667,
+      "token_source": "api_usage",
+      "model": "glm-4.6",
+      "stop_reason": "tool_use",
+      "tool_calls": [
+        {
+          "name": "run_count_query",
+          "input": {
+            "filter": {
+              "refunded": false,
+              "status": "paid"
+            }
+          },
+          "ok": true,
+          "output": {
+            "active_customers": 93
+          }
+        },
+        {
+          "name": "submit_answer",
+          "input": {
+            "active_customers": 93,
+            "filter_used": {
+              "refunded": false,
+              "status": "paid"
+            },
+            "memory_ids_used": [
+              "mem_acme_active_customers"
+            ],
+            "policy_version": 2
+          },
+          "ok": true,
+          "output": {}
+        }
+      ]
+    },
+    "revocation": {
+      "run_id": "run_a58309227a",
+      "tenant_id": "acme",
+      "memory_mode": "governed",
+      "included": [],
+      "rejected": [
+        {
+          "_id": "mem_acme_active_customers@v2",
+          "memory_id": "mem_acme_active_customers",
+          "version": 2,
+          "reason": "status_revoked"
+        },
+        {
+          "_id": "mem_acme_active_customers@v1",
+          "memory_id": "mem_acme_active_customers",
+          "version": 1,
+          "reason": "status_revoked"
+        }
+      ],
+      "candidates": 2,
+      "decision": {
+        "active_customers": 93,
+        "filter_used": {
+          "refunded": false,
+          "status": "paid"
+        },
+        "memory_ids_used": [],
+        "policy_version": 2
+      },
+      "decision_evidence": {
+        "filter": {
+          "refunded": false,
+          "status": "paid"
+        },
+        "active_customers": 93,
+        "policy_version": 2,
+        "policy_version_source": "get_policy",
+        "memory_ids_used": []
+      },
+      "first_input_tokens": 615,
+      "total_input_tokens": 2523,
+      "token_source": "api_usage",
+      "model": "glm-4.6",
+      "stop_reason": "tool_use",
+      "tool_calls": [
+        {
+          "name": "get_policy",
+          "input": {
+            "metric": "active_customers"
+          },
+          "ok": true,
+          "output": {
+            "policy_id": "pol_acme_active_customers_v2",
+            "version": 2
+          }
+        },
+        {
+          "name": "inspect_collection",
+          "input": {
+            "collection": "orders"
+          },
+          "ok": true,
+          "output": {}
+        },
+        {
+          "name": "run_count_query",
+          "input": {
+            "filter": {
+              "refunded": false,
+              "status": "paid"
+            }
+          },
+          "ok": true,
+          "output": {
+            "active_customers": 93
+          }
+        },
+        {
+          "name": "submit_answer",
+          "input": {
+            "active_customers": 93,
+            "filter_used": {
+              "refunded": false,
+              "status": "paid"
+            },
+            "memory_ids_used": [],
+            "policy_version": 2
+          },
+          "ok": true,
+          "output": {}
+        }
+      ]
+    },
+    "compression": {
+      "raw trajectory": {
+        "run_id": "run_2b2bed1b85",
+        "tenant_id": "acme",
+        "memory_mode": "provided",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers.raw@v1",
+            "memory_id": "mem_acme_active_customers.raw",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 0,
+        "decision": {
+          "active_customers": 93,
+          "filter_used": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "memory_ids_used": [
+            "mem_acme_active_customers.raw"
+          ],
+          "policy_version": 2
+        },
+        "decision_evidence": {
+          "filter": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "active_customers": 93,
+          "policy_version": 2,
+          "policy_version_source": "memory:mem_acme_active_customers.raw",
+          "memory_ids_used": [
+            "mem_acme_active_customers.raw"
+          ]
+        },
+        "first_input_tokens": 1267,
+        "total_input_tokens": 2641,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {
+                "refunded": false,
+                "status": "paid"
+              }
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 93
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 93,
+              "filter_used": {
+                "refunded": false,
+                "status": "paid"
+              },
+              "memory_ids_used": [
+                "mem_acme_active_customers.raw"
+              ],
+              "policy_version": 2
+            },
+            "ok": true,
+            "output": {}
+          }
+        ],
+        "memory_tokens_estimate": 411,
+        "expected_action": true,
+        "pointers": [
+          "pol_acme_active_customers_v2"
+        ],
+        "pointers_resolve": true
+      },
+      "compact": {
+        "run_id": "run_5e826c4518",
+        "tenant_id": "acme",
+        "memory_mode": "provided",
+        "included": [
+          {
+            "_id": "mem_acme_active_customers.compact@v1",
+            "memory_id": "mem_acme_active_customers.compact",
+            "version": 1
+          }
+        ],
+        "rejected": [],
+        "candidates": 0,
+        "decision": {
+          "active_customers": 93,
+          "filter_used": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "memory_ids_used": [
+            "mem_acme_active_customers.compact"
+          ],
+          "policy_version": 2
+        },
+        "decision_evidence": {
+          "filter": {
+            "refunded": false,
+            "status": "paid"
+          },
+          "active_customers": 93,
+          "policy_version": 2,
+          "policy_version_source": "memory:mem_acme_active_customers.compact",
+          "memory_ids_used": [
+            "mem_acme_active_customers.compact"
+          ]
+        },
+        "first_input_tokens": 788,
+        "total_input_tokens": 1685,
+        "token_source": "api_usage",
+        "model": "glm-4.6",
+        "stop_reason": "tool_use",
+        "tool_calls": [
+          {
+            "name": "run_count_query",
+            "input": {
+              "filter": {
+                "refunded": false,
+                "status": "paid"
+              }
+            },
+            "ok": true,
+            "output": {
+              "active_customers": 93
+            }
+          },
+          {
+            "name": "submit_answer",
+            "input": {
+              "active_customers": 93,
+              "filter_used": {
+                "refunded": false,
+                "status": "paid"
+              },
+              "memory_ids_used": [
+                "mem_acme_active_customers.compact"
+              ],
+              "policy_version": 2
+            },
+            "ok": true,
+            "output": {}
+          }
+        ],
+        "memory_tokens_estimate": 122,
+        "expected_action": true,
+        "pointers": [
+          "pol_acme_active_customers_v2",
+          "run:run_8284efd2be"
+        ],
+        "pointers_resolve": true
+      }
+    }
+  }
+}
