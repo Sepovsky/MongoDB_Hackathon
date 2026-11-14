@@ -70,7 +70,7 @@ def ensure_schema(db, mode, log=print):
     db.memories.create_index([("memory_id", 1), ("version", 1)], unique=True)
     db.memories.create_index([("tenant_id", 1), ("status", 1), ("expires_at", 1)])
     db.policies.create_index([("tenant_id", 1), ("metric", 1), ("version", 1)], unique=True)
-    db.orders.create_index([("tenant_id", 1), ("order_date", 1)])
+    db.usage.create_index([("tenant_id", 1), ("month", 1)])
     db.runs.create_index([("tenant_id", 1), ("created_at", -1)])
     if mode == "atlas":
         # Physical cleanup only. The gate checks expiry on every read because TTL runs ~once a minute.

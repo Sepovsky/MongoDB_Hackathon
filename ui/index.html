@@ -85,6 +85,16 @@
   .tot { display: flex; gap: 14px; flex-wrap: wrap; margin: 6px 0 14px; }
   .tot .card { flex: 1 1 260px; }
   .tot .big { font-size: 34px; font-weight: 700; }
+  .intro { max-width: 1100px; display: flex; flex-direction: column; gap: 18px; margin-top: 6px; }
+  .intro .q { font-size: 30px; font-weight: 700; line-height: 1.25; }
+  .intro .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .intro .row .card { flex: 1 1 300px; }
+  .intro .num { font-size: 44px; font-weight: 700; line-height: 1.1; }
+  .intro .num.bad { color: var(--red); } .intro .num.good { color: var(--green); }
+  .intro p { font-size: 16px; margin: 4px 0 0; }
+  .flowline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 15px; }
+  .flowline span.st { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+  .flowline span.ar { color: var(--muted); }
   .controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
   .status { color: var(--muted); font-size: 13px; }
   .empty { padding: 40px; color: var(--muted); }
@@ -97,7 +107,7 @@
 <header>
   <div>
     <h1>Memory<span>Delta</span></h1>
-    <div class="tagline">What happens to a memory before it can steer the agent</div>
+    <div class="tagline">An AI emissions analyst whose memory knows which rule it was built for</div>
   </div>
   <div class="chips" id="chips"></div>
   <div class="controls">
@@ -110,68 +120,71 @@
 <main id="main"><div class="empty">Loading results…</div></main>
 
 <script>
-const TASK = "How many active customers did we have in October 2026?";
+const TASK = "What are our Scope 2 emissions from purchased electricity for FY2025-26?";
 const STAGES = ["Who asks", "Vector Search", "Validation gate", "Sent to the model", "Agent actions", "Verified answer"];
+const close = (a, b) => typeof a === "number" && typeof b === "number" && Math.abs(a - b) < 0.001;
+const tonnes = (x) => x == null ? "—" : `${Math.round(x * 1000) / 1000} t`;
 
 const REASON_TEXT = (r) => {
-  if (r === "tenant_mismatch") return "belongs to another tenant";
-  if (r === "user_not_allowed") return "user not allowed";
+  if (r === "tenant_mismatch") return "belongs to another company";
+  if (r === "user_not_allowed") return "private to another analyst";
   if (r === "status_superseded") return "superseded by a newer version";
   if (r === "status_revoked") return "revoked";
   if (r === "expired") return "expired";
   if (r === "evidence_incomplete") return "missing evidence";
   const m = /policy_version_mismatch\(memory=v(\d+), current=v(\d+)\)/.exec(r || "");
-  if (m) return `built on policy v${m[1]}, current is v${m[2]}`;
+  if (m) return `built with factor table v${m[1]}, current is v${m[2]}`;
   return r;
 };
 
 const SCENES = [
-  { id: "isolation", tab: "1 · Isolation", title: "Tenant isolation",
-    setup: "Three companies ask the same question. Tenant identity comes from the login session, never from the prompt.",
+  { id: "intro", tab: "0 · The question", title: "The question", intro: true },
+  { id: "isolation", tab: "1 · Isolation", title: "Each company sees only its own saved calculations",
+    setup: "Three companies, each with one NSW site, ask the same question. The company comes from the login session, never from the prompt.",
     lanes: s => [
-      { label: "Without scoping", sub: "baseline: no tenant filter, no gate", run: s.isolation.unscoped_baseline, tenant: "acme", expected: 120 },
-      { label: "MemoryDelta · acme", run: s.isolation.acme, tenant: "acme", expected: 120 },
-      { label: "MemoryDelta · globex", run: s.isolation.globex, tenant: "globex", expected: 41 },
-      { label: "MemoryDelta · initech", sub: "has no memories yet", run: s.isolation.initech, tenant: "initech", expected: 25 },
+      { label: "Plain RAG memory", sub: "no company filter, no gate", run: s.isolation.unscoped_baseline, tenant: "acme", expected: 66 },
+      { label: "MemoryDelta · acme", sub: "Sydney plant, 100,000 kWh", run: s.isolation.acme, tenant: "acme", expected: 66 },
+      { label: "MemoryDelta · globex", sub: "Newcastle warehouse, 250,000 kWh", run: s.isolation.globex, tenant: "globex", expected: 165 },
+      { label: "MemoryDelta · initech", sub: "no saved calculations yet", run: s.isolation.initech, tenant: "initech", expected: 26.4 },
     ],
     insight: s => {
       const leak = s.isolation.foreign_in_baseline;
-      return [["Foreign memories reaching the model", `Baseline: <b style="color:var(--red)">${leak}</b> &nbsp;·&nbsp; MemoryDelta: <b>0</b>`],
-              ["Why", "Vector Search filters by the session's tenant, then every candidate is re-read from Atlas and checked in code before the prompt is built."]];
+      return [["Another company’s memory reaching the model", `Plain RAG memory: <b style="color:var(--red)">${leak}</b> &nbsp;·&nbsp; MemoryDelta: <b>0</b>`],
+              ["Why", "Vector Search filters by the logged-in company, then every candidate is re-read from Atlas and checked in code before the prompt is built."]];
     } },
-  { id: "behavior", tab: "2 · Behavior", title: "Does memory change what the agent does?",
-    setup: "Same task, model, settings and data. The only difference: whether the approved memory is provided.",
+  { id: "behavior", tab: "2 · Memory on/off", title: "A valid saved calculation changes what the agent does",
+    setup: "Same question, model, settings and data. The only difference: whether acme’s approved saved calculation is provided.",
     lanes: s => [
-      { label: "No memory", run: s.behavior.no_memory, tenant: "acme", expected: 120 },
-      { label: "Approved memory", run: s.behavior.memory, tenant: "acme", expected: 120 },
+      { label: "No memory", run: s.behavior.no_memory, tenant: "acme", expected: 66 },
+      { label: "Approved memory", run: s.behavior.memory, tenant: "acme", expected: 66 },
     ],
     insight: s => {
       const a = s.behavior.no_memory.tool_calls.length, b = s.behavior.memory.tool_calls.length;
-      return [["Tool calls", `No memory: <b style="color:var(--text)">${a}</b> &nbsp;→&nbsp; with memory: <b>${b}</b>, same answer`],
-              ["What changed", "With memory the agent skips policy and schema discovery and runs the verified query directly. The actions changed, not just the prompt."]];
+      return [["Tool calls", `No memory: <b style="color:var(--text)">${a}</b> &nbsp;→&nbsp; with memory: <b>${b}</b>, same 66 t`],
+              ["What changed", "With memory the agent skips looking up the factor and the usage data, and runs the verified calculation directly. The actions changed, not just the prompt."]];
     } },
-  { id: "policy", tab: "3 · Policy change", title: "The rules changed. The memory didn't.",
-    setup: "Admin changes acme's definition of “active”: v1 any order → v2 paid, non-refunded order. Correct answer is now 93.",
+  { id: "policy", tab: "3 · New factor table", title: "The 2025–26 factor table is published. The memory still says 0.66.",
+    setup: "The regulator publishes the 2025–26 NGER factor for NSW: 0.66 → 0.64 kg CO₂e/kWh. Same site, same 100,000 kWh. The right answer is now 64 t.",
     lanes: s => [
-      { label: "Without the gate", sub: "reuses the most similar memory", run: s.policy_change.ungated, tenant: "acme", expected: 93 },
-      { label: "MemoryDelta", run: s.policy_change.governed, tenant: "acme", expected: 93 },
+      { label: "Company-scoped, no checks", sub: "reuses the most similar saved calculation", run: s.policy_change.ungated, tenant: "acme", expected: 64 },
+      { label: "MemoryDelta", run: s.policy_change.governed, tenant: "acme", expected: 64 },
     ],
-    insight: () => [["The key moment", "Both found the same memory. <b>Only one knew not to trust it.</b>"],
-                    ["How", "Each memory records the policy version it was built on. The gate compares it with the live policy in Atlas before the memory can reach the model."]] },
-  { id: "correction", tab: "4 · Correction", title: "Correct the memory",
-    setup: "correct_memory checks the new filter against the active policy, re-runs it on real data, writes v2, marks v1 superseded and records a delta.",
-    lanes: s => [{ label: "Next run", run: s.correction, tenant: "acme", expected: 93 }],
-    insight: () => [["Result", "Only <b>v2</b> reaches the model. v1 stays in Atlas for audit but is blocked as superseded."]] },
-  { id: "revocation", tab: "5 · Revocation", title: "Forget the memory",
+    insight: () => [["The key moment", "Both found the same saved calculation. <b>Only one knew it was built with last year’s factor.</b> 66 t is stale; 64 t is right."],
+                    ["How", "Each memory records the factor-table version it was built with. The gate compares it with the company’s current version in Atlas before the memory can reach the model."]] },
+  { id: "correction", tab: "4 · Correction", title: "Correct the saved calculation",
+    setup: "The analyst corrects the memory to the 2025–26 factor. It is checked against the current factor table, re-run on the site’s data, saved as v2; v1 is superseded and a delta is recorded.",
+    lanes: s => [{ label: "Next run", run: s.correction, tenant: "acme", expected: 64 }],
+    insight: () => [["Result", "Only <b>v2</b> (factor 0.64) reaches the model. v1 stays in Atlas for audit but is blocked as superseded."]] },
+  { id: "revocation", tab: "5 · Revocation", title: "Forget the saved calculation",
     setup: "revoke_memory marks every version revoked and removes its embedding and content. Metadata stays for audit.",
-    lanes: s => [{ label: "Next run", run: s.revocation, tenant: "acme", expected: 93 }],
-    insight: () => [["Result", "<b>Neither version</b> reaches the model, and the agent still answers by working it out fresh."],
+    lanes: s => [{ label: "Next run", run: s.revocation, tenant: "acme", expected: 64 }],
+    insight: () => [["Result", "<b>Neither version</b> reaches the model, and the agent still answers 64 t by working it out fresh."],
                     ["Index lag", "If Vector Search briefly still returns a revoked memory, the re-read from Atlas blocks it."]] },
   { id: "compression", tab: "6 · Compression", title: "Raw history vs evidence-preserving memory",
-    setup: "Same authorized evidence, same model and rules. Only the memory's representation changes.",
+    setup: "Same authorized evidence (acme’s own 2025–26 run), same model and rules. Only the memory’s representation changes.",
     lanes: s => [
-      { label: "Raw trajectory", run: s.compression["raw trajectory"], tenant: "acme", expected: 93 },
-      { label: "Compact memory", run: s.compression["compact"], tenant: "acme", expected: 93 },
+      { label: "Raw trajectory", run: s.compression["raw trajectory"], tenant: "acme", expected: 64 },
+      { label: "Compact memory", run: s.compression["compact"], tenant: "acme", expected: 64 },
     ],
     insight: s => {
       const raw = s.compression["raw trajectory"], c = s.compression["compact"];
@@ -184,25 +197,41 @@ const SCENES = [
     } },
 ];
 
+function renderIntro() {
+  return `<div class="intro">
+    <div class="q">“${TASK}”</div>
+    <div class="row">
+      <div class="card"><h3>Last year’s saved calculation</h3><div class="num bad">66 t ✕</div>
+        <p>100,000 kWh × 0.66 kg CO₂e/kWh, the NGER factor for NSW in 2024–25. The math is right; the rule is out of date.</p></div>
+      <div class="card"><h3>This year’s rule</h3><div class="num good">64 t ✓</div>
+        <p>The 2025–26 factor is 0.64. A saved calculation is valid for a site, a framework and a year, not forever.</p></div>
+    </div>
+    <div class="card"><h3>What to watch in each row</h3>
+      <div class="flowline"><span class="st">Who asks</span><span class="ar">→</span><span class="st">Vector Search</span><span class="ar">→</span><span class="st">Validation gate</span><span class="ar">→</span><span class="st">Sent to the model</span><span class="ar">→</span><span class="st">Agent actions</span><span class="ar">→</span><span class="st">Verified answer</span></div>
+      <p>Each row is one live run on MongoDB Atlas. Red means a stale or foreign memory reached the model, or the answer is wrong.</p></div>
+  </div>
+  <div class="hint">← → switch scenes · Space replays · electricity use is illustrative; factors: Clean Energy Regulator, NGER NSW</div>`;
+}
+
 let data = null, current = 0, timers = [];
 
 const esc = (x) => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fmtFilter = (f) => JSON.stringify(f);
-const memLabel = (m) => `${m.memory_id.replace("mem_", "").replace("_active_customers", "")}@v${m.version}`;
+const memLabel = (m) => `${(m.memory_id || "?").replace("mem_", "").replace("_scope2", "")}@v${m.version}`;
 
 function laneHTML(L) {
   const r = L.run, mode = r.memory_mode;
   const foreign = r.included.filter(m => !m.memory_id.includes(L.tenant));
-  const answer = r.decision ? r.decision.active_customers : null;
-  const correct = answer === L.expected && foreign.length === 0;
+  const answer = r.decision ? r.decision.emissions_t : null;
+  const correct = close(answer, L.expected) && foreign.length === 0;
   const bad = !correct;
 
-  const who = `<div class="k">tenant</div><b>${esc(r.tenant_id)}</b><div class="k"><span class="lock">🔒</span> from login session</div>`;
+  const who = `<div class="k">company</div><b>${esc(r.tenant_id)}</b><div class="k"><span class="lock">🔒</span> from login session</div>`;
 
   const candN = r.candidates ?? (r.included.length + r.rejected.length);
   const search = mode === "none" ? `<span class="pill off">memory off</span><div class="k">no search</div>`
     : mode === "provided" ? `<span class="pill off">no search</span><div class="k">same evidence handed in directly</div>`
-    : `<div class="k">${mode === "unscoped" ? "searched <b style='color:var(--red)'>all tenants</b>" : `searched <b>${esc(r.tenant_id)}</b> only`}</div>
+    : `<div class="k">${mode === "unscoped" ? "searched <b style='color:var(--red)'>all companies</b>" : `searched <b>${esc(r.tenant_id)}</b> only`}</div>
        <div><b>${candN}</b> candidate${candN === 1 ? "" : "s"}</div>`;
 
   let gate;
@@ -221,17 +250,17 @@ function laneHTML(L) {
 
   const tools = r.tool_calls.map(c => {
     let extra = "";
-    if (c.name === "run_count_query") extra = ` ${esc(fmtFilter(c.input.filter))}${c.output && c.output.active_customers != null ? ` <span class="r">→ ${c.output.active_customers}</span>` : ""}`;
-    if (c.name === "get_policy" && c.output && c.output.version) extra = ` <span class="r">→ v${c.output.version}</span>`;
+    if (c.name === "calculate_emissions") extra = ` factor ${esc(c.input && c.input.factor)}${c.output && c.output.emissions_t != null ? ` <span class="r">→ ${esc(tonnes(c.output.emissions_t))}</span>` : ""}`;
+    if (c.name === "get_emission_factor" && c.output && c.output.version) extra = ` <span class="r">→ v${c.output.version}${c.output.factor != null ? ` · ${esc(c.output.factor)}` : ""}</span>`;
     return `<span class="tool ${c.ok ? "" : "err"}"><span class="n">${esc(c.name)}</span>${extra}${c.ok ? "" : " ✕"}</span>`;
   }).join("") || `<span class="k">none</span>`;
 
   const ev = r.decision_evidence || {};
-  const why = foreign.length ? "answer built with another tenant's memory in the prompt"
-            : answer !== L.expected ? `stale: expected ${L.expected}` : "matches the executed query";
-  const ans = `<div class="answer ${correct ? "good" : "bad"}">${answer ?? "—"} ${correct ? "✓" : "✕"}</div>
+  const why = foreign.length ? "another company’s memory was in the prompt"
+            : !close(answer, L.expected) ? `stale: expected ${tonnes(L.expected)}` : "matches the executed calculation";
+  const ans = `<div class="answer ${correct ? "good" : "bad"}">${esc(tonnes(answer))} ${correct ? "✓" : "✕"}</div>
     <div class="verdict" style="color:${correct ? "var(--muted)" : "var(--red)"}">${esc(why)}</div>
-    ${ev.policy_version_source ? `<div class="k">policy v${ev.policy_version} from ${esc(ev.policy_version_source.replace("memory:mem_", "memory ").replace("_active_customers", ""))}</div>` : ""}`;
+    ${ev.policy_version_source ? `<div class="k">factor table v${ev.policy_version} from ${esc(ev.policy_version_source.replace("memory:mem_", "memory ").replace("_scope2", ""))}</div>` : ""}`;
 
   return `<div class="lane ${bad ? "bad" : ""}"><div class="lane-grid">
     <div class="lane-title">${esc(L.label)}${L.sub ? `<small>${esc(L.sub)}</small>` : ""}</div>
@@ -240,7 +269,7 @@ function laneHTML(L) {
 }
 
 let bench = null;
-const ARM_LABEL = { naive: "Plain RAG memory", scoped: "Tenant-scoped, no checks", memorydelta: "MemoryDelta" };
+const ARM_LABEL = { naive: "Plain RAG memory", scoped: "Company-scoped, no checks", memorydelta: "MemoryDelta" };
 
 function renderBench() {
   document.querySelectorAll("nav button").forEach((b, i) => b.classList.toggle("active", i === SCENES.length));
@@ -253,13 +282,14 @@ function renderBench() {
       <p style="font-size:14px;margin-top:6px">foreign memories in prompt: <b style="color:${s.foreign_exposures ? "var(--red)" : "var(--green)"}">${s.foreign_exposures}</b>
       · ineligible memories in prompt: <b style="color:${s.ineligible_exposures ? "var(--red)" : "var(--green)"}">${s.ineligible_exposures}</b>
       · avg tool calls ${s.avg_tool_calls}</p></div>`; }).join("");
-  const rows = bench.cases.map(c => `<tr><td class="case"><b>${esc(c.title)}</b><span>${esc(c.why_hard)} · ${esc(c.tenant)}/${esc(c.user)} · truth ${c.expected}</span></td>` +
+  const rows = bench.cases.map(c => `<tr><td class="case"><b>${esc(c.title)}</b><span>${esc(c.why_hard)} · ${esc(c.tenant)}/${esc(c.user)} · truth ${esc(tonnes(c.expected))}</span></td>` +
     arms.map(a => { const r = c.arms[a]; const bad = r.ineligible_in_prompt;
-      return `<td><div class="cell-ans ${r.correct ? "good" : "bad"}">${r.answer ?? "—"} ${r.correct ? "✓" : "✕"}</div>
+      const ok = r.correct || close(r.answer, c.expected);
+      return `<td><div class="cell-ans ${ok ? "good" : "bad"}">${esc(tonnes(r.answer))} ${ok ? "✓" : "✕"}</div>
         <div class="cell-sub ${bad ? "bad" : ""}">${bad ? `${bad} bad memor${bad === 1 ? "y" : "ies"} in prompt` : "clean prompt"}${r.foreign_in_prompt ? ` · ${r.foreign_in_prompt} foreign` : ""}</div>
         <div class="cell-sub">${r.tool_calls.length} tool calls</div></td>`; }).join("") + `</tr>`).join("");
   m.innerHTML = `<div class="scene-head"><h2>Hard cases</h2><div class="question">same model (${esc(bench.model)}), data and task for every arm · truth computed from the data</div></div>
-    <div class="setup">“Bad memory in prompt” = a memory the gate would reject (other tenant, other user, superseded, expired, unverified, or built on an old rule) that still reached the model.</div>
+    <div class="setup">“Bad memory in prompt” = a memory the gate would reject (other company, other analyst, superseded, expired, unverified, or built with an old factor table) that still reached the model.</div>
     <div class="tot">${tot}</div>
     <table class="score"><tr><th>Case</th>${arms.map(a => `<th>${ARM_LABEL[a] || a}</th>`).join("")}</tr>${rows}</table>
     <div class="hint">data: results/bench.json · python -m memorydelta.bench</div>`;
@@ -269,6 +299,7 @@ function render() {
   if (current === SCENES.length) return renderBench();
   const S = SCENES[current], s = data.scenes;
   document.querySelectorAll("nav button").forEach((b, i) => b.classList.toggle("active", i === current));
+  if (S.intro) { document.getElementById("main").innerHTML = renderIntro(); return; }
   const insight = (S.insight ? S.insight(s) : []).map(([h, p]) => `<div class="card"><h3>${h}</h3><p>${p}</p></div>`).join("");
   document.getElementById("main").innerHTML = `
     <div class="scene-head"><h2>${S.title}</h2><div class="question">Question: <q>${TASK}</q></div></div>
@@ -329,14 +360,14 @@ async function runLive() {
 
 document.getElementById("tabs").innerHTML = SCENES.map((S, i) => `<button data-i="${i}">${S.tab}</button>`).join("")
   + `<button data-i="${SCENES.length}">7 · Hard cases</button>`;
-document.getElementById("tabs").addEventListener("click", e => { if (e.target.dataset.i) { current = +e.target.dataset.i; render(); } });
+document.getElementById("tabs").addEventListener("click", e => { if (e.target.dataset.i !== undefined && data) { current = +e.target.dataset.i; render(); } });
 document.getElementById("replay").addEventListener("click", play);
 document.getElementById("runlive").addEventListener("click", runLive);
 document.addEventListener("keydown", e => {
   if (!data) return;
   if (e.key === "ArrowRight") { current = Math.min(SCENES.length, current + 1); render(); }
   if (e.key === "ArrowLeft") { current = Math.max(0, current - 1); render(); }
-  if (e.key === " ") { e.preventDefault(); if (current < SCENES.length) play(); }
+  if (e.key === " ") { e.preventDefault(); if (current < SCENES.length && !SCENES[current].intro) play(); }
 });
 load();
 </script>

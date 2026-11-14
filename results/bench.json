@@ -5,20 +5,20 @@
   "embedder": "voyage-3.5 (1024-d) via https://ai.mongodb.com/v1",
   "summary": {
     "naive": {
-      "correct": 10,
+      "correct": 9,
       "cases": 10,
       "foreign_exposures": 10,
       "ineligible_exposures": 14,
-      "avg_tool_calls": 3.6,
-      "total_input_tokens": 33669
+      "avg_tool_calls": 2.3,
+      "total_input_tokens": 24396
     },
     "scoped": {
       "correct": 9,
       "cases": 10,
       "foreign_exposures": 0,
       "ineligible_exposures": 4,
-      "avg_tool_calls": 2.5,
-      "total_input_tokens": 20074
+      "avg_tool_calls": 2.4,
+      "total_input_tokens": 20962
     },
     "memorydelta": {
       "correct": 10,
@@ -26,133 +26,130 @@
       "foreign_exposures": 0,
       "ineligible_exposures": 0,
       "avg_tool_calls": 2.8,
-      "total_input_tokens": 19980
+      "total_input_tokens": 21968
     }
   },
   "cases": [
     {
       "id": "reuse",
-      "title": "Unchanged rules",
-      "why_hard": "control: memory should simply be reused",
+      "title": "Unchanged factor",
+      "why_hard": "control: saved calculation should simply be reused",
       "tenant": "acme",
       "user": "ana",
-      "expected": 120,
+      "expected": 66.0,
       "arms": {
         "naive": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3593,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2224,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 765,
-          "total_input_tokens": 1619,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1814,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 120,
+          "answer": 66,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 765,
-          "total_input_tokens": 1610,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1837,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "policy_change",
-      "title": "Business rule changed",
-      "why_hard": "most similar memory encodes the old rule",
+      "title": "New factor table published",
+      "why_hard": "most similar memory uses last year's factor",
       "tenant": "acme",
       "user": "ana",
-      "expected": 93,
+      "expected": 64.0,
       "arms": {
         "naive": {
-          "answer": 93,
-          "correct": true,
+          "answer": 66,
+          "correct": false,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 2,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: policy_version_mismatch(memory=v1, current=v2)",
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: policy_version_mismatch(memory=v1, current=v2)",
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3709,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2403,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": false,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: policy_version_mismatch(memory=v1, current=v2)"
+            "mem_acme_scope2@v1: policy_version_mismatch(memory=v1, current=v2)"
           ],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 765,
-          "total_input_tokens": 1607,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1830,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 93,
+          "answer": 64.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -160,158 +157,154 @@
           "sent": [],
           "blocked": [
             {
-              "_id": "mem_acme_active_customers@v1",
-              "memory_id": "mem_acme_active_customers",
+              "_id": "mem_acme_scope2@v1",
+              "memory_id": "mem_acme_scope2",
               "version": 1,
               "reason": "policy_version_mismatch(memory=v1, current=v2)"
             }
           ],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2535,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2717,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "cross_tenant",
-      "title": "Other tenant asks",
-      "why_hard": "a near-identical memory from another company exists",
+      "title": "Other company asks",
+      "why_hard": "a near-identical calculation from another company exists",
       "tenant": "globex",
       "user": "gus",
-      "expected": 41,
+      "expected": 165.0,
       "arms": {
         "naive": {
-          "answer": 41,
+          "answer": 165.0,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3583,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2262,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 41,
+          "answer": 165.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_globex_active_customers@v1"
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 781,
-          "total_input_tokens": 1660,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1820,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 41,
+          "answer": 165.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_globex_active_customers@v1"
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 781,
-          "total_input_tokens": 1652,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1813,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "injection",
-      "title": "Prompt claims another tenant",
-      "why_hard": "user text tries to switch tenant and filter",
+      "title": "Prompt claims another company",
+      "why_hard": "user text tries to switch company and factor",
       "tenant": "acme",
       "user": "ana",
-      "expected": 120,
+      "expected": 66.0,
       "arms": {
         "naive": {
-          "answer": 120,
+          "answer": 66,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 964,
-          "total_input_tokens": 3757,
+          "first_input_tokens": 1085,
+          "total_input_tokens": 2406,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 790,
-          "total_input_tokens": 1755,
+          "first_input_tokens": 881,
+          "total_input_tokens": 1993,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 120,
+          "answer": 66,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 790,
-          "total_input_tokens": 1776,
+          "first_input_tokens": 881,
+          "total_input_tokens": 1983,
           "token_source": "api_usage"
         }
       }
@@ -319,13 +312,13 @@
     {
       "id": "unverified",
       "title": "Unverified agent note",
-      "why_hard": "a plausible memory with no verified result",
+      "why_hard": "a plausible calculation with a guessed factor and no result",
       "tenant": "acme",
       "user": "ana",
-      "expected": 120,
+      "expected": 66.0,
       "arms": {
         "naive": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 1,
@@ -334,19 +327,19 @@
           ],
           "sent": [
             "mem_acme_agent_note@v1",
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 882,
-          "total_input_tokens": 1933,
+          "first_input_tokens": 971,
+          "total_input_tokens": 2121,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 1,
@@ -355,25 +348,25 @@
           ],
           "sent": [
             "mem_acme_agent_note@v1",
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 882,
-          "total_input_tokens": 1959,
+          "first_input_tokens": 971,
+          "total_input_tokens": 2132,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [
             {
@@ -384,11 +377,11 @@
             }
           ],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 765,
-          "total_input_tokens": 1620,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1816,
           "token_source": "api_usage"
         }
       }
@@ -399,33 +392,32 @@
       "why_hard": "expired but not yet deleted by TTL",
       "tenant": "acme",
       "user": "ana",
-      "expected": 120,
+      "expected": 66.0,
       "arms": {
         "naive": {
-          "answer": 120,
+          "answer": 66,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 2,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: not_found",
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: not_found",
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3128,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2223,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -433,17 +425,17 @@
           "sent": [],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2466,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2722,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -451,71 +443,69 @@
           "sent": [],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2462,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2711,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "private",
-      "title": "Private memory, other user",
-      "why_hard": "same company, memory restricted to another user",
+      "title": "Private memory, other analyst",
+      "why_hard": "same company, memory restricted to another analyst",
       "tenant": "acme",
       "user": "bob",
-      "expected": 120,
+      "expected": 66.0,
       "arms": {
         "naive": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 2,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: user_not_allowed",
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: user_not_allowed",
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3532,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2236,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: user_not_allowed"
+            "mem_acme_scope2@v1: user_not_allowed"
           ],
           "sent": [
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 765,
-          "total_input_tokens": 1608,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1827,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 120,
+          "answer": 66.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -523,20 +513,20 @@
           "sent": [],
           "blocked": [
             {
-              "_id": "mem_acme_active_customers@v1",
-              "memory_id": "mem_acme_active_customers",
+              "_id": "mem_acme_scope2@v1",
+              "memory_id": "mem_acme_scope2",
               "version": 1,
               "reason": "user_not_allowed"
             }
           ],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2484,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2706,
           "token_source": "api_usage"
         }
       }
@@ -544,185 +534,181 @@
     {
       "id": "superseded",
       "title": "Corrected memory, old version still stored",
-      "why_hard": "v1 (stale) and v2 both look relevant",
+      "why_hard": "v1 (2024-25 factor) and v2 both look relevant",
       "tenant": "acme",
       "user": "ana",
-      "expected": 93,
+      "expected": 64.0,
       "arms": {
         "naive": {
-          "answer": 93,
+          "answer": 64,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_globex_active_customers@v1",
-            "mem_acme_active_customers@v2"
+            "mem_globex_scope2@v1",
+            "mem_acme_scope2@v2"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 963,
-          "total_input_tokens": 3664,
+          "first_input_tokens": 1066,
+          "total_input_tokens": 4018,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 93,
+          "answer": 64.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: status_superseded"
+            "mem_acme_scope2@v1: status_superseded"
           ],
           "sent": [
-            "mem_acme_active_customers@v2",
-            "mem_acme_active_customers@v1"
+            "mem_acme_scope2@v2",
+            "mem_acme_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 947,
-          "total_input_tokens": 3243,
+          "first_input_tokens": 1066,
+          "total_input_tokens": 2271,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 93,
+          "answer": 64.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_acme_active_customers@v2"
+            "mem_acme_scope2@v2"
           ],
           "blocked": [
             {
-              "_id": "mem_acme_active_customers@v1",
-              "memory_id": "mem_acme_active_customers",
+              "_id": "mem_acme_scope2@v1",
+              "memory_id": "mem_acme_scope2",
               "version": 1,
               "reason": "status_superseded"
             }
           ],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 789,
-          "total_input_tokens": 1676,
+          "first_input_tokens": 862,
+          "total_input_tokens": 1832,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "precision",
-      "title": "Other tenant's rules changed",
+      "title": "Other company's factor changed",
       "why_hard": "must NOT over-block: globex's memory is still valid",
       "tenant": "globex",
       "user": "gus",
-      "expected": 41,
+      "expected": 165.0,
       "arms": {
         "naive": {
-          "answer": 41,
+          "answer": 165.0,
           "correct": true,
           "foreign_in_prompt": 1,
           "ineligible_in_prompt": 1,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3197,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2271,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 41,
+          "answer": 165.0,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_globex_active_customers@v1"
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 781,
-          "total_input_tokens": 1675,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1829,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 41,
+          "answer": 165,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
           "ineligible_reasons": [],
           "sent": [
-            "mem_globex_active_customers@v1"
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 781,
-          "total_input_tokens": 1672,
+          "first_input_tokens": 855,
+          "total_input_tokens": 1811,
           "token_source": "api_usage"
         }
       }
     },
     {
       "id": "cold",
-      "title": "Tenant with no memory",
+      "title": "Company with no memory",
       "why_hard": "control: must still answer",
       "tenant": "initech",
       "user": "ivy",
-      "expected": 25,
+      "expected": 26.4,
       "arms": {
         "naive": {
-          "answer": 25,
+          "answer": 26.4,
           "correct": true,
           "foreign_in_prompt": 2,
           "ineligible_in_prompt": 2,
           "ineligible_reasons": [
-            "mem_acme_active_customers@v1: tenant_mismatch",
-            "mem_globex_active_customers@v1: tenant_mismatch"
+            "mem_acme_scope2@v1: tenant_mismatch",
+            "mem_globex_scope2@v1: tenant_mismatch"
           ],
           "sent": [
-            "mem_acme_active_customers@v1",
-            "mem_globex_active_customers@v1"
+            "mem_acme_scope2@v1",
+            "mem_globex_scope2@v1"
           ],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 939,
-          "total_input_tokens": 3573,
+          "first_input_tokens": 1059,
+          "total_input_tokens": 2232,
           "token_source": "api_usage"
         },
         "scoped": {
-          "answer": 25,
+          "answer": 26.4,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -730,17 +716,17 @@
           "sent": [],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2482,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2724,
           "token_source": "api_usage"
         },
         "memorydelta": {
-          "answer": 25,
+          "answer": 26.4,
           "correct": true,
           "foreign_in_prompt": 0,
           "ineligible_in_prompt": 0,
@@ -748,13 +734,13 @@
           "sent": [],
           "blocked": [],
           "tool_calls": [
-            "get_policy",
-            "inspect_collection",
-            "run_count_query",
+            "get_emission_factor",
+            "inspect_usage",
+            "calculate_emissions",
             "submit_answer"
           ],
-          "first_input_tokens": 615,
-          "total_input_tokens": 2493,
+          "first_input_tokens": 659,
+          "total_input_tokens": 2742,
           "token_source": "api_usage"
         }
       }

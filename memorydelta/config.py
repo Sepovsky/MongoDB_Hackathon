@@ -10,13 +10,14 @@ DB_NAME = os.getenv("MEMORYDELTA_DB", "memorydelta_demo")
 VECTOR_INDEX = "memory_vec"
 EMBED_DIM = 1024
 MODEL = os.getenv("MEMORYDELTA_MODEL", "claude-opus-5-5")
-METRIC = "active_customers"
-WINDOW_START = datetime(2026, 10, 1)
-WINDOW_END = datetime(2026, 11, 1)
-TASK = "How many active customers did we have in October 2026?"
+METRIC = "scope2_electricity"
+WINDOW_START = datetime(2025, 7, 1)   # Australian reporting year FY2025-26
+WINDOW_END = datetime(2026, 7, 1)
+PERIOD = "FY2025-26"
+TASK = "What are our Scope 2 emissions from purchased electricity for FY2025-26?"
 
 # Collections this project owns. Seeding only ever touches these, inside DB_NAME.
-COLLECTIONS = ("orders", "policies", "memories", "memory_deltas", "runs")
+COLLECTIONS = ("usage", "policies", "memories", "memory_deltas", "runs")
 
 
 def mongodb_uri():

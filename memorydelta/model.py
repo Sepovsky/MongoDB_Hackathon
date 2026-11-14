@@ -66,15 +66,15 @@ class ScriptedModel:
         if mems:
             m = mems[0]
             flt, ver = _filter_from_memory(m)
-            plan = [("run_count_query", {"filter": flt})]
-            final = lambda: {"active_customers": results[-1]["active_customers"], "filter_used": flt,
+            plan = [("calculate_emissions", dict(flt))]
+            final = lambda: {"emissions_t": results[-1]["emissions_t"], "factor_used": flt["factor"],
                              "policy_version": ver, "memory_ids_used": [m["memory_id"]]}
         else:
-            plan = [("get_policy", {"metric": "active_customers"}), ("inspect_collection", {"collection": "orders"})]
+            plan = [("get_emission_factor", {"metric": "scope2_electricity"}), ("inspect_usage", {"collection": "usage"})]
             if len(results) >= 1:
-                plan.append(("run_count_query", {"filter": results[0]["filter"]}))
-            final = lambda: {"active_customers": results[-1]["active_customers"],
-                             "filter_used": results[0]["filter"], "policy_version": results[0]["version"],
+                plan.append(("calculate_emissions", {"factor": results[0]["factor"]}))
+            final = lambda: {"emissions_t": results[-1]["emissions_t"],
+                             "factor_used": results[0]["factor"], "policy_version": results[0]["version"],
                              "memory_ids_used": []}
         if step < len(plan):
             name, args = plan[step]
@@ -85,11 +85,11 @@ class ScriptedModel:
 
 
 def _filter_from_memory(m):
-    if "verified_filter" in m:
-        return m["verified_filter"], m.get("policy_version")
+    if "verified_params" in m:
+        return m["verified_params"], m.get("policy_version")
     calls = m["raw_trajectory"]["tool_calls"]
-    flt = [c for c in calls if c["name"] == "run_count_query" and c["ok"]][-1]["input"]["filter"]
-    pol = [c for c in calls if c["name"] == "get_policy" and c["ok"]]
+    flt = dict([c for c in calls if c["name"] == "calculate_emissions" and c["ok"]][-1]["input"])
+    pol = [c for c in calls if c["name"] == "get_emission_factor" and c["ok"]]
     return flt, (pol[-1]["output"]["version"] if pol else None)
 
 

@@ -1,10 +1,10 @@
-"""Bounded tools. The tenant always comes from the trusted RequestContext, never from tool args."""
+"""Bounded tools for a Scope 2 electricity-emissions analyst. The company (tenant) always comes from the
+trusted RequestContext, never from tool args. A calculation's parameters are {"factor": <kg CO2e/kWh>}."""
 import json
 
-from .config import METRIC, WINDOW_END, WINDOW_START, RequestContext
+from .config import METRIC, PERIOD, WINDOW_END, WINDOW_START, RequestContext
 
-ALLOWED_FIELDS = {"status": str, "refunded": bool, "total": (int, float)}
-ALLOWED_OPS = {"$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in"}
+CALC = "calculate_emissions"
 
 
 class ToolError(ValueError):
@@ -12,54 +12,50 @@ class ToolError(ValueError):
 
 
 def canonical_filter(f):
-    """Order-independent form for comparing filters."""
+    """Order-independent form for comparing calculation parameters, e.g. {"factor": 0.64}."""
     return json.dumps(f, sort_keys=True)
 
 
-def validate_filter(f):
-    if not isinstance(f, dict):
-        raise ToolError("filter must be an object")
-    for field, cond in f.items():
-        if field not in ALLOWED_FIELDS:
-            raise ToolError(f"field {field!r} not allowed; allowed: {sorted(ALLOWED_FIELDS)}")
-        if isinstance(cond, dict):
-            for op in cond:
-                if op not in ALLOWED_OPS:
-                    raise ToolError(f"operator {op!r} not allowed")
-    return f
+def validate_params(p):
+    if not isinstance(p, dict) or set(p) != {"factor"}:
+        raise ToolError('parameters must be exactly {"factor": <number>}')
+    f = p["factor"]
+    if isinstance(f, bool) or not isinstance(f, (int, float)) or not 0 < f < 5:
+        raise ToolError("factor must be a number of kg CO2e/kWh between 0 and 5")
+    return p
 
 
 TOOL_SPECS = [
     {
-        "name": "get_policy",
-        "description": "Read the current authoritative definition of a business metric for this tenant, "
-                       "including its version and the order filter that implements it.",
+        "name": "get_emission_factor",
+        "description": "Read this company's current authoritative emission factor for purchased electricity "
+                       "(location-based Scope 2): framework, region, reporting period, version and factor "
+                       "in kg CO2e/kWh.",
         "input_schema": {"type": "object", "properties": {
             "metric": {"type": "string", "enum": [METRIC]}}, "required": ["metric"]},
     },
     {
-        "name": "inspect_collection",
-        "description": "Show the fields, types and two sample documents of the orders collection.",
+        "name": "inspect_usage",
+        "description": "Show this company's site, the fields of its monthly electricity readings and two samples.",
         "input_schema": {"type": "object", "properties": {
-            "collection": {"type": "string", "enum": ["orders"]}}, "required": ["collection"]},
+            "collection": {"type": "string", "enum": ["usage"]}}, "required": ["collection"]},
     },
     {
-        "name": "run_count_query",
-        "description": "Count distinct customer_id in this tenant's orders for October 2026 that match "
-                       "`filter`. Allowed fields: status (str), refunded (bool), total (number). "
-                       "Allowed operators: $eq $ne $gt $gte $lt $lte $in. Use {} for no extra filter.",
+        "name": CALC,
+        "description": f"Sum this company's site electricity use (kWh) for {PERIOD} (1 Jul 2025 to 30 Jun 2026) "
+                       "and multiply by `factor` (kg CO2e/kWh). Returns kWh and tonnes CO2e.",
         "input_schema": {"type": "object", "properties": {
-            "filter": {"type": "object"}}, "required": ["filter"]},
+            "factor": {"type": "number"}}, "required": ["factor"]},
     },
     {
         "name": "submit_answer",
         "description": "Submit the final structured answer. Call exactly once, at the end.",
         "input_schema": {"type": "object", "properties": {
-            "active_customers": {"type": "integer"},
-            "filter_used": {"type": "object"},
+            "emissions_t": {"type": "number"},
+            "factor_used": {"type": "number"},
             "policy_version": {"type": ["integer", "null"]},
             "memory_ids_used": {"type": "array", "items": {"type": "string"}},
-        }, "required": ["active_customers", "filter_used", "policy_version", "memory_ids_used"]},
+        }, "required": ["emissions_t", "factor_used", "policy_version", "memory_ids_used"]},
     },
 ]
 
@@ -69,7 +65,7 @@ class Tools:
         self.db, self.ctx = db, ctx
         self.calls = []  # actual executed calls: name, input, output
         # Trusted, set by the application: memories actually placed in this run's request,
-        # each as {memory_id, policy_version, filter}. Used to validate answer metadata.
+        # each as {memory_id, policy_version, filter} where filter = the calculation parameters.
         self.memory_evidence = memory_evidence or []
 
     def current_policy(self):
@@ -88,46 +84,47 @@ class Tools:
         self.calls.append({"name": name, "input": args, "output": out, "ok": ok})
         return out
 
-    def _get_policy(self, metric=METRIC):
+    def _get_emission_factor(self, metric=METRIC):
         p = self.current_policy()
         if not p:
-            raise ToolError(f"no active policy for {metric}")
+            raise ToolError(f"no active emission factor for {metric}")
         return {"policy_id": p["_id"], "metric": p["metric"], "version": p["version"],
-                "definition": p["definition"], "filter": json.loads(p["filter_json"])}
+                "framework": p["framework"], "region": p["region"], "period": p["period"],
+                "factor": json.loads(p["filter_json"])["factor"], "definition": p["definition"]}
 
-    def _inspect_collection(self, collection="orders"):
+    def _inspect_usage(self, collection="usage"):
         q = {"tenant_id": self.ctx.tenant_id}
-        sample = list(self.db.orders.find(q, {"_id": 0, "tenant_id": 0}).limit(2))
+        sample = list(self.db.usage.find(q, {"_id": 0, "tenant_id": 0}).limit(2))
         for s in sample:
-            s["order_date"] = s["order_date"].isoformat()
-        return {"collection": "orders",
-                "fields": {"order_id": "str", "customer_id": "str", "order_date": "datetime",
-                           "status": "str: paid|pending", "refunded": "bool", "total": "number"},
-                "sample": sample,
-                "documents": self.db.orders.count_documents(q)}
+            s["month"] = s["month"].isoformat()[:7]
+        site = sample[0]["site_name"] if sample else None
+        return {"collection": "usage", "site": site,
+                "fields": {"site_id": "str", "site_name": "str", "region": "str", "month": "date",
+                           "kwh": "number (electricity purchased that month)"},
+                "sample": sample, "readings": self.db.usage.count_documents(q)}
 
-    def _run_count_query(self, filter):
-        validate_filter(filter)
-        q = dict(filter)
-        q["tenant_id"] = self.ctx.tenant_id          # injected server-side, after validation
-        q["order_date"] = {"$gte": WINDOW_START, "$lt": WINDOW_END}
-        n = len(self.db.orders.distinct("customer_id", q))
-        return {"active_customers": n, "filter": filter, "window": "2026-10"}
+    def _calculate_emissions(self, factor):
+        validate_params({"factor": factor})
+        q = {"tenant_id": self.ctx.tenant_id,          # injected server-side
+             "month": {"$gte": WINDOW_START, "$lt": WINDOW_END}}
+        kwh = sum(d["kwh"] for d in self.db.usage.find(q, {"kwh": 1}))
+        return {"emissions_t": round(kwh * factor / 1000, 3), "kwh": kwh, "factor": factor, "period": PERIOD}
 
-    def _submit_answer(self, active_customers, filter_used, policy_version=None, memory_ids_used=None):
-        """The answer must match a successful count executed in this same run, and its metadata must
+    def _submit_answer(self, emissions_t, factor_used, policy_version=None, memory_ids_used=None):
+        """The answer must match a successful calculation executed in this same run, and its metadata must
         match trusted run state: memory IDs that were actually provided, and a policy version that a
-        get_policy result or a cited memory in this run ties to the submitted filter."""
-        counts = [c for c in self.calls if c["name"] == "run_count_query" and c["ok"]]
-        if not counts:
-            raise ToolError("submit_answer requires a successful run_count_query earlier in this run")
-        last = counts[-1]
-        if canonical_filter(filter_used) != canonical_filter(last["input"]["filter"]):
-            raise ToolError(f"filter_used {filter_used} does not match the last executed query filter "
-                            f"{last['input']['filter']}")
-        if active_customers != last["output"]["active_customers"]:
-            raise ToolError(f"active_customers {active_customers} does not match the last executed count "
-                            f"{last['output']['active_customers']}")
+        get_emission_factor result or a cited memory in this run ties to the submitted factor."""
+        calcs = [c for c in self.calls if c["name"] == CALC and c["ok"]]
+        if not calcs:
+            raise ToolError(f"submit_answer requires a successful {CALC} earlier in this run")
+        last = calcs[-1]
+        used = {"factor": factor_used}
+        if canonical_filter(used) != canonical_filter(last["input"]):
+            raise ToolError(f"factor_used {factor_used} does not match the factor of the last executed "
+                            f"calculation {last['input'].get('factor')}")
+        if not isinstance(emissions_t, (int, float)) or abs(emissions_t - last["output"]["emissions_t"]) > 0.001:
+            raise ToolError(f"emissions_t {emissions_t} does not match the last executed calculation "
+                            f"{last['output']['emissions_t']}")
 
         memory_ids_used = list(memory_ids_used or [])
         provided = {}                     # memory_id -> every provided version's evidence
@@ -138,24 +135,24 @@ class Tools:
             raise ToolError(f"memory_ids_used contains IDs not provided in this run: {unknown}; "
                             f"provided: {sorted(provided)}")
 
-        # Evidence that ties a policy version to a filter: get_policy results, and cited memories.
-        evidence = [(c["output"]["version"], c["output"]["filter"], "get_policy")
-                    for c in self.calls if c["name"] == "get_policy" and c["ok"]]
+        # Evidence that ties a policy version to a factor: get_emission_factor results, and cited memories.
+        evidence = [(c["output"]["version"], {"factor": c["output"]["factor"]}, "get_emission_factor")
+                    for c in self.calls if c["name"] == "get_emission_factor" and c["ok"]]
         evidence += [(e["policy_version"], e["filter"], f"memory:{m}") for m in memory_ids_used for e in provided[m]]
         if not evidence:
             if policy_version is not None:
-                raise ToolError("policy_version must be null when no get_policy result or cited memory "
-                                "establishes it in this run")
+                raise ToolError("policy_version must be null when no get_emission_factor result or cited "
+                                "memory establishes it in this run")
             source = None
         else:
             match = [src for ver, flt, src in evidence
-                     if ver == policy_version and canonical_filter(flt) == canonical_filter(filter_used)]
+                     if ver == policy_version and canonical_filter(flt) == canonical_filter(used)]
             if not match:
                 seen = sorted({f"v{ver} {canonical_filter(flt)} ({src})" for ver, flt, src in evidence})
-                raise ToolError(f"policy_version {policy_version} with filter {filter_used} is not supported by "
-                                f"this run's evidence: {seen}")
+                raise ToolError(f"policy_version {policy_version} with factor {factor_used} is not supported "
+                                f"by this run's evidence: {seen}")
             source = match[0]
         return {"accepted": True, "verified_against": {
-            "filter": last["input"]["filter"], "active_customers": active_customers,
+            "factor": factor_used, "emissions_t": last["output"]["emissions_t"],
             "policy_version": policy_version, "policy_version_source": source,
             "memory_ids_used": memory_ids_used}}

@@ -6,58 +6,60 @@
   "scenes": {
     "isolation": {
       "acme": {
-        "run_id": "run_54526f8290",
+        "run_id": "run_9d4a419848",
         "tenant_id": "acme",
         "memory_mode": "governed",
         "included": [
           {
-            "_id": "mem_acme_active_customers@v1",
-            "memory_id": "mem_acme_active_customers",
+            "_id": "mem_acme_scope2@v1",
+            "memory_id": "mem_acme_scope2",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 1,
         "decision": {
-          "active_customers": 120,
-          "filter_used": {},
+          "emissions_t": 66,
+          "factor_used": 0.66,
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {},
-          "active_customers": 120,
+          "factor": 0.66,
+          "emissions_t": 66.0,
           "policy_version": 1,
-          "policy_version_source": "memory:mem_acme_active_customers",
+          "policy_version_source": "memory:mem_acme_scope2",
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ]
         },
-        "first_input_tokens": 765,
-        "total_input_tokens": 1612,
+        "first_input_tokens": 855,
+        "total_input_tokens": 1815,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {}
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 120
+              "emissions_t": 66.0,
+              "kwh": 100000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 120,
-              "filter_used": {},
+              "emissions_t": 66,
+              "factor_used": 0.66,
               "memory_ids_used": [
-                "mem_acme_active_customers"
+                "mem_acme_scope2"
               ],
               "policy_version": 1
             },
@@ -67,74 +69,60 @@
         ]
       },
       "globex": {
-        "run_id": "run_1e440dd4cd",
+        "run_id": "run_22a4ea0bf4",
         "tenant_id": "globex",
         "memory_mode": "governed",
         "included": [
           {
-            "_id": "mem_globex_active_customers@v1",
-            "memory_id": "mem_globex_active_customers",
+            "_id": "mem_globex_scope2@v1",
+            "memory_id": "mem_globex_scope2",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 1,
         "decision": {
-          "active_customers": 41,
-          "filter_used": {
-            "total": {
-              "$gte": 100
-            }
-          },
+          "emissions_t": 165,
+          "factor_used": 0.66,
           "memory_ids_used": [
-            "mem_globex_active_customers"
+            "mem_globex_scope2"
           ],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {
-            "total": {
-              "$gte": 100
-            }
-          },
-          "active_customers": 41,
+          "factor": 0.66,
+          "emissions_t": 165.0,
           "policy_version": 1,
-          "policy_version_source": "memory:mem_globex_active_customers",
+          "policy_version_source": "memory:mem_globex_scope2",
           "memory_ids_used": [
-            "mem_globex_active_customers"
+            "mem_globex_scope2"
           ]
         },
-        "first_input_tokens": 781,
-        "total_input_tokens": 1650,
+        "first_input_tokens": 855,
+        "total_input_tokens": 1830,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {
-                "total": {
-                  "$gte": 100
-                }
-              }
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 41
+              "emissions_t": 165.0,
+              "kwh": 250000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 41,
-              "filter_used": {
-                "total": {
-                  "$gte": 100
-                }
-              },
+              "emissions_t": 165,
+              "factor_used": 0.66,
               "memory_ids_used": [
-                "mem_globex_active_customers"
+                "mem_globex_scope2"
               ],
               "policy_version": 1
             },
@@ -144,67 +132,70 @@
         ]
       },
       "initech": {
-        "run_id": "run_ab955b7c09",
+        "run_id": "run_d6705b54d0",
         "tenant_id": "initech",
         "memory_mode": "governed",
         "included": [],
         "rejected": [],
         "candidates": 0,
         "decision": {
-          "active_customers": 25,
-          "filter_used": {},
-          "memory_ids_used": [],
-          "policy_version": 1
-        },
-        "decision_evidence": {
-          "filter": {},
-          "active_customers": 25,
+          "emissions_t": 26.4,
+          "factor_used": 0.66,
           "policy_version": 1,
-          "policy_version_source": "get_policy",
           "memory_ids_used": []
         },
-        "first_input_tokens": 615,
-        "total_input_tokens": 2488,
+        "decision_evidence": {
+          "factor": 0.66,
+          "emissions_t": 26.4,
+          "policy_version": 1,
+          "policy_version_source": "get_emission_factor",
+          "memory_ids_used": []
+        },
+        "first_input_tokens": 659,
+        "total_input_tokens": 2736,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "get_policy",
+            "name": "get_emission_factor",
             "input": {
-              "metric": "active_customers"
+              "metric": "scope2_electricity"
             },
             "ok": true,
             "output": {
-              "policy_id": "pol_initech_active_customers_v1",
-              "version": 1
+              "policy_id": "pol_initech_scope2_electricity_v1",
+              "version": 1,
+              "factor": 0.66
             }
           },
           {
-            "name": "inspect_collection",
+            "name": "inspect_usage",
             "input": {
-              "collection": "orders"
+              "collection": "usage"
             },
             "ok": true,
             "output": {}
           },
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {}
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 25
+              "emissions_t": 26.4,
+              "kwh": 40000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 25,
-              "filter_used": {},
-              "memory_ids_used": [],
-              "policy_version": 1
+              "emissions_t": 26.4,
+              "factor_used": 0.66,
+              "policy_version": 1,
+              "memory_ids_used": []
             },
             "ok": true,
             "output": {}
@@ -212,82 +203,65 @@
         ]
       },
       "unscoped_baseline": {
-        "run_id": "run_2c32ee2bb3",
+        "run_id": "run_6fc0cd0b5b",
         "tenant_id": "acme",
         "memory_mode": "unscoped",
         "included": [
           {
-            "_id": "mem_acme_active_customers@v1",
-            "memory_id": "mem_acme_active_customers",
+            "_id": "mem_acme_scope2@v1",
+            "memory_id": "mem_acme_scope2",
             "version": 1
           },
           {
-            "_id": "mem_globex_active_customers@v1",
-            "memory_id": "mem_globex_active_customers",
+            "_id": "mem_globex_scope2@v1",
+            "memory_id": "mem_globex_scope2",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 2,
         "decision": {
-          "active_customers": 120,
-          "filter_used": {},
+          "emissions_t": 66.0,
+          "factor_used": 0.66,
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {},
-          "active_customers": 120,
+          "factor": 0.66,
+          "emissions_t": 66.0,
           "policy_version": 1,
-          "policy_version_source": "get_policy",
+          "policy_version_source": "memory:mem_acme_scope2",
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ]
         },
-        "first_input_tokens": 939,
-        "total_input_tokens": 3581,
+        "first_input_tokens": 1059,
+        "total_input_tokens": 2250,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "get_policy",
+            "name": "calculate_emissions",
             "input": {
-              "metric": "active_customers"
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "policy_id": "pol_acme_active_customers_v1",
-              "version": 1
-            }
-          },
-          {
-            "name": "inspect_collection",
-            "input": {
-              "collection": "orders"
-            },
-            "ok": true,
-            "output": {}
-          },
-          {
-            "name": "run_count_query",
-            "input": {
-              "filter": {}
-            },
-            "ok": true,
-            "output": {
-              "active_customers": 120
+              "emissions_t": 66.0,
+              "kwh": 100000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 120,
-              "filter_used": {},
+              "emissions_t": 66.0,
+              "factor_used": 0.66,
               "memory_ids_used": [
-                "mem_acme_active_customers"
+                "mem_acme_scope2"
               ],
               "policy_version": 1
             },
@@ -300,69 +274,72 @@
     },
     "behavior": {
       "expected": {
-        "none": "discovers first (get_policy / inspect_collection) before counting",
-        "governed": "first action is run_count_query with the memory's verified filter {}"
+        "none": "discovers first (get_emission_factor / inspect_usage) before calculating",
+        "governed": "first action is calculate_emissions with the memory's verified factor 0.66"
       },
       "no_memory": {
-        "run_id": "run_1b07b97a64",
+        "run_id": "run_2ed008cb8b",
         "tenant_id": "acme",
         "memory_mode": "none",
         "included": [],
         "rejected": [],
         "candidates": 0,
         "decision": {
-          "active_customers": 120,
-          "filter_used": {},
+          "emissions_t": 66.0,
+          "factor_used": 0.66,
           "memory_ids_used": [],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {},
-          "active_customers": 120,
+          "factor": 0.66,
+          "emissions_t": 66.0,
           "policy_version": 1,
-          "policy_version_source": "get_policy",
+          "policy_version_source": "get_emission_factor",
           "memory_ids_used": []
         },
-        "first_input_tokens": 615,
-        "total_input_tokens": 2474,
+        "first_input_tokens": 659,
+        "total_input_tokens": 2711,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "get_policy",
+            "name": "get_emission_factor",
             "input": {
-              "metric": "active_customers"
+              "metric": "scope2_electricity"
             },
             "ok": true,
             "output": {
-              "policy_id": "pol_acme_active_customers_v1",
-              "version": 1
+              "policy_id": "pol_acme_scope2_electricity_v1",
+              "version": 1,
+              "factor": 0.66
             }
           },
           {
-            "name": "inspect_collection",
+            "name": "inspect_usage",
             "input": {
-              "collection": "orders"
+              "collection": "usage"
             },
             "ok": true,
             "output": {}
           },
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {}
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 120
+              "emissions_t": 66.0,
+              "kwh": 100000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 120,
-              "filter_used": {},
+              "emissions_t": 66.0,
+              "factor_used": 0.66,
               "memory_ids_used": [],
               "policy_version": 1
             },
@@ -372,58 +349,60 @@
         ]
       },
       "memory": {
-        "run_id": "run_2726eb5644",
+        "run_id": "run_67f03b93da",
         "tenant_id": "acme",
         "memory_mode": "governed",
         "included": [
           {
-            "_id": "mem_acme_active_customers@v1",
-            "memory_id": "mem_acme_active_customers",
+            "_id": "mem_acme_scope2@v1",
+            "memory_id": "mem_acme_scope2",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 1,
         "decision": {
-          "active_customers": 120,
-          "filter_used": {},
+          "emissions_t": 66.0,
+          "factor_used": 0.66,
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {},
-          "active_customers": 120,
+          "factor": 0.66,
+          "emissions_t": 66.0,
           "policy_version": 1,
-          "policy_version_source": "memory:mem_acme_active_customers",
+          "policy_version_source": "memory:mem_acme_scope2",
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ]
         },
-        "first_input_tokens": 765,
-        "total_input_tokens": 1617,
+        "first_input_tokens": 855,
+        "total_input_tokens": 1827,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {}
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 120
+              "emissions_t": 66.0,
+              "kwh": 100000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 120,
-              "filter_used": {},
+              "emissions_t": 66.0,
+              "factor_used": 0.66,
               "memory_ids_used": [
-                "mem_acme_active_customers"
+                "mem_acme_scope2"
               ],
               "policy_version": 1
             },
@@ -439,58 +418,60 @@
     },
     "policy_change": {
       "ungated": {
-        "run_id": "run_c6dc53c234",
+        "run_id": "run_6e552560aa",
         "tenant_id": "acme",
         "memory_mode": "ungated",
         "included": [
           {
-            "_id": "mem_acme_active_customers@v1",
-            "memory_id": "mem_acme_active_customers",
+            "_id": "mem_acme_scope2@v1",
+            "memory_id": "mem_acme_scope2",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 1,
         "decision": {
-          "active_customers": 120,
-          "filter_used": {},
+          "emissions_t": 66,
+          "factor_used": 0.66,
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ],
           "policy_version": 1
         },
         "decision_evidence": {
-          "filter": {},
-          "active_customers": 120,
+          "factor": 0.66,
+          "emissions_t": 66.0,
           "policy_version": 1,
-          "policy_version_source": "memory:mem_acme_active_customers",
+          "policy_version_source": "memory:mem_acme_scope2",
           "memory_ids_used": [
-            "mem_acme_active_customers"
+            "mem_acme_scope2"
           ]
         },
-        "first_input_tokens": 765,
-        "total_input_tokens": 1598,
+        "first_input_tokens": 855,
+        "total_input_tokens": 1817,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {}
+              "factor": 0.66
             },
             "ok": true,
             "output": {
-              "active_customers": 120
+              "emissions_t": 66.0,
+              "kwh": 100000,
+              "factor": 0.66
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 120,
-              "filter_used": {},
+              "emissions_t": 66,
+              "factor_used": 0.66,
               "memory_ids_used": [
-                "mem_acme_active_customers"
+                "mem_acme_scope2"
               ],
               "policy_version": 1
             },
@@ -500,84 +481,75 @@
         ]
       },
       "governed": {
-        "run_id": "run_8284efd2be",
+        "run_id": "run_1d015cecb1",
         "tenant_id": "acme",
         "memory_mode": "governed",
         "included": [],
         "rejected": [
           {
-            "_id": "mem_acme_active_customers@v1",
-            "memory_id": "mem_acme_active_customers",
+            "_id": "mem_acme_scope2@v1",
+            "memory_id": "mem_acme_scope2",
             "version": 1,
             "reason": "policy_version_mismatch(memory=v1, current=v2)"
           }
         ],
         "candidates": 1,
         "decision": {
-          "active_customers": 93,
-          "filter_used": {
-            "refunded": false,
-            "status": "paid"
-          },
+          "emissions_t": 64.0,
+          "factor_used": 0.64,
           "memory_ids_used": [],
           "policy_version": 2
         },
         "decision_evidence": {
-          "filter": {
-            "refunded": false,
-            "status": "paid"
-          },
-          "active_customers": 93,
+          "factor": 0.64,
+          "emissions_t": 64.0,
           "policy_version": 2,
-          "policy_version_source": "get_policy",
+          "policy_version_source": "get_emission_factor",
           "memory_ids_used": []
         },
-        "first_input_tokens": 615,
-        "total_input_tokens": 2546,
+        "first_input_tokens": 659,
+        "total_input_tokens": 2734,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "get_policy",
+            "name": "get_emission_factor",
             "input": {
-              "metric": "active_customers"
+              "metric": "scope2_electricity"
             },
             "ok": true,
             "output": {
-              "policy_id": "pol_acme_active_customers_v2",
-              "version": 2
+              "policy_id": "pol_acme_scope2_electricity_v2",
+              "version": 2,
+              "factor": 0.64
             }
           },
           {
-            "name": "inspect_collection",
+            "name": "inspect_usage",
             "input": {
-              "collection": "orders"
+              "collection": "usage"
             },
             "ok": true,
             "output": {}
           },
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {
-                "refunded": false,
-                "status": "paid"
-              }
+              "factor": 0.64
             },
             "ok": true,
             "output": {
-              "active_customers": 93
+              "emissions_t": 64.0,
+              "kwh": 100000,
+              "factor": 0.64
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 93,
-              "filter_used": {
-                "refunded": false,
-                "status": "paid"
-              },
+              "emissions_t": 64.0,
+              "factor_used": 0.64,
               "memory_ids_used": [],
               "policy_version": 2
             },
@@ -588,77 +560,67 @@
       }
     },
     "correction": {
-      "run_id": "run_0aa0b0f66f",
+      "run_id": "run_59fd43ade4",
       "tenant_id": "acme",
       "memory_mode": "governed",
       "included": [
         {
-          "_id": "mem_acme_active_customers@v2",
-          "memory_id": "mem_acme_active_customers",
+          "_id": "mem_acme_scope2@v2",
+          "memory_id": "mem_acme_scope2",
           "version": 2
         }
       ],
       "rejected": [
         {
-          "_id": "mem_acme_active_customers@v1",
-          "memory_id": "mem_acme_active_customers",
+          "_id": "mem_acme_scope2@v1",
+          "memory_id": "mem_acme_scope2",
           "version": 1,
           "reason": "status_superseded"
         }
       ],
       "candidates": 2,
       "decision": {
-        "active_customers": 93,
-        "filter_used": {
-          "refunded": false,
-          "status": "paid"
-        },
+        "emissions_t": 64.0,
+        "factor_used": 0.64,
         "memory_ids_used": [
-          "mem_acme_active_customers"
+          "mem_acme_scope2"
         ],
         "policy_version": 2
       },
       "decision_evidence": {
-        "filter": {
-          "refunded": false,
-          "status": "paid"
-        },
-        "active_customers": 93,
+        "factor": 0.64,
+        "emissions_t": 64.0,
         "policy_version": 2,
-        "policy_version_source": "memory:mem_acme_active_customers",
+        "policy_version_source": "memory:mem_acme_scope2",
         "memory_ids_used": [
-          "mem_acme_active_customers"
+          "mem_acme_scope2"
         ]
       },
-      "first_input_tokens": 789,
-      "total_input_tokens": 1667,
+      "first_input_tokens": 862,
+      "total_input_tokens": 1824,
       "token_source": "api_usage",
       "model": "glm-4.6",
       "stop_reason": "tool_use",
       "tool_calls": [
         {
-          "name": "run_count_query",
+          "name": "calculate_emissions",
           "input": {
-            "filter": {
-              "refunded": false,
-              "status": "paid"
-            }
+            "factor": 0.64
           },
           "ok": true,
           "output": {
-            "active_customers": 93
+            "emissions_t": 64.0,
+            "kwh": 100000,
+            "factor": 0.64
           }
         },
         {
           "name": "submit_answer",
           "input": {
-            "active_customers": 93,
-            "filter_used": {
-              "refunded": false,
-              "status": "paid"
-            },
+            "emissions_t": 64.0,
+            "factor_used": 0.64,
             "memory_ids_used": [
-              "mem_acme_active_customers"
+              "mem_acme_scope2"
             ],
             "policy_version": 2
           },
@@ -668,92 +630,70 @@
       ]
     },
     "revocation": {
-      "run_id": "run_a58309227a",
+      "run_id": "run_0963aa7057",
       "tenant_id": "acme",
       "memory_mode": "governed",
       "included": [],
-      "rejected": [
-        {
-          "_id": "mem_acme_active_customers@v2",
-          "memory_id": "mem_acme_active_customers",
-          "version": 2,
-          "reason": "status_revoked"
-        },
-        {
-          "_id": "mem_acme_active_customers@v1",
-          "memory_id": "mem_acme_active_customers",
-          "version": 1,
-          "reason": "status_revoked"
-        }
-      ],
-      "candidates": 2,
+      "rejected": [],
+      "candidates": 0,
       "decision": {
-        "active_customers": 93,
-        "filter_used": {
-          "refunded": false,
-          "status": "paid"
-        },
-        "memory_ids_used": [],
-        "policy_version": 2
-      },
-      "decision_evidence": {
-        "filter": {
-          "refunded": false,
-          "status": "paid"
-        },
-        "active_customers": 93,
+        "emissions_t": 64.0,
+        "factor_used": 0.64,
         "policy_version": 2,
-        "policy_version_source": "get_policy",
         "memory_ids_used": []
       },
-      "first_input_tokens": 615,
-      "total_input_tokens": 2523,
+      "decision_evidence": {
+        "factor": 0.64,
+        "emissions_t": 64.0,
+        "policy_version": 2,
+        "policy_version_source": "get_emission_factor",
+        "memory_ids_used": []
+      },
+      "first_input_tokens": 659,
+      "total_input_tokens": 2695,
       "token_source": "api_usage",
       "model": "glm-4.6",
       "stop_reason": "tool_use",
       "tool_calls": [
         {
-          "name": "get_policy",
+          "name": "get_emission_factor",
           "input": {
-            "metric": "active_customers"
+            "metric": "scope2_electricity"
           },
           "ok": true,
           "output": {
-            "policy_id": "pol_acme_active_customers_v2",
-            "version": 2
+            "policy_id": "pol_acme_scope2_electricity_v2",
+            "version": 2,
+            "factor": 0.64
           }
         },
         {
-          "name": "inspect_collection",
+          "name": "inspect_usage",
           "input": {
-            "collection": "orders"
+            "collection": "usage"
           },
           "ok": true,
           "output": {}
         },
         {
-          "name": "run_count_query",
+          "name": "calculate_emissions",
           "input": {
-            "filter": {
-              "refunded": false,
-              "status": "paid"
-            }
+            "factor": 0.64
           },
           "ok": true,
           "output": {
-            "active_customers": 93
+            "emissions_t": 64.0,
+            "kwh": 100000,
+            "factor": 0.64
           }
         },
         {
           "name": "submit_answer",
           "input": {
-            "active_customers": 93,
-            "filter_used": {
-              "refunded": false,
-              "status": "paid"
-            },
-            "memory_ids_used": [],
-            "policy_version": 2
+            "emissions_t": 64.0,
+            "factor_used": 0.64,
+            "policy_version": 2,
+            "memory_ids_used": []
           },
           "ok": true,
           "output": {}
@@ -762,70 +702,60 @@
     },
     "compression": {
       "raw trajectory": {
-        "run_id": "run_2b2bed1b85",
+        "run_id": "run_b604a901d3",
         "tenant_id": "acme",
         "memory_mode": "provided",
         "included": [
           {
-            "_id": "mem_acme_active_customers.raw@v1",
-            "memory_id": "mem_acme_active_customers.raw",
+            "_id": "mem_acme_scope2.raw@v1",
+            "memory_id": "mem_acme_scope2.raw",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 0,
         "decision": {
-          "active_customers": 93,
-          "filter_used": {
-            "refunded": false,
-            "status": "paid"
-          },
+          "emissions_t": 64,
+          "factor_used": 0.64,
           "memory_ids_used": [
-            "mem_acme_active_customers.raw"
+            "mem_acme_scope2.raw"
           ],
           "policy_version": 2
         },
         "decision_evidence": {
-          "filter": {
-            "refunded": false,
-            "status": "paid"
-          },
-          "active_customers": 93,
+          "factor": 0.64,
+          "emissions_t": 64.0,
           "policy_version": 2,
-          "policy_version_source": "memory:mem_acme_active_customers.raw",
+          "policy_version_source": "memory:mem_acme_scope2.raw",
           "memory_ids_used": [
-            "mem_acme_active_customers.raw"
+            "mem_acme_scope2.raw"
           ]
         },
-        "first_input_tokens": 1267,
-        "total_input_tokens": 2641,
+        "first_input_tokens": 1308,
+        "total_input_tokens": 2730,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {
-                "refunded": false,
-                "status": "paid"
-              }
+              "factor": 0.64
             },
             "ok": true,
             "output": {
-              "active_customers": 93
+              "emissions_t": 64.0,
+              "kwh": 100000,
+              "factor": 0.64
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 93,
-              "filter_used": {
-                "refunded": false,
-                "status": "paid"
-              },
+              "emissions_t": 64,
+              "factor_used": 0.64,
               "memory_ids_used": [
-                "mem_acme_active_customers.raw"
+                "mem_acme_scope2.raw"
               ],
               "policy_version": 2
             },
@@ -833,78 +763,68 @@
             "output": {}
           }
         ],
-        "memory_tokens_estimate": 411,
+        "memory_tokens_estimate": 387,
         "expected_action": true,
         "pointers": [
-          "pol_acme_active_customers_v2"
+          "pol_acme_scope2_electricity_v2"
         ],
         "pointers_resolve": true
       },
       "compact": {
-        "run_id": "run_5e826c4518",
+        "run_id": "run_d606837012",
         "tenant_id": "acme",
         "memory_mode": "provided",
         "included": [
           {
-            "_id": "mem_acme_active_customers.compact@v1",
-            "memory_id": "mem_acme_active_customers.compact",
+            "_id": "mem_acme_scope2.compact@v1",
+            "memory_id": "mem_acme_scope2.compact",
             "version": 1
           }
         ],
         "rejected": [],
         "candidates": 0,
         "decision": {
-          "active_customers": 93,
-          "filter_used": {
-            "refunded": false,
-            "status": "paid"
-          },
+          "emissions_t": 64.0,
+          "factor_used": 0.64,
           "memory_ids_used": [
-            "mem_acme_active_customers.compact"
+            "mem_acme_scope2.compact"
           ],
           "policy_version": 2
         },
         "decision_evidence": {
-          "filter": {
-            "refunded": false,
-            "status": "paid"
-          },
-          "active_customers": 93,
+          "factor": 0.64,
+          "emissions_t": 64.0,
           "policy_version": 2,
-          "policy_version_source": "memory:mem_acme_active_customers.compact",
+          "policy_version_source": "memory:mem_acme_scope2.compact",
           "memory_ids_used": [
-            "mem_acme_active_customers.compact"
+            "mem_acme_scope2.compact"
           ]
         },
-        "first_input_tokens": 788,
-        "total_input_tokens": 1685,
+        "first_input_tokens": 863,
+        "total_input_tokens": 1864,
         "token_source": "api_usage",
         "model": "glm-4.6",
         "stop_reason": "tool_use",
         "tool_calls": [
           {
-            "name": "run_count_query",
+            "name": "calculate_emissions",
             "input": {
-              "filter": {
-                "refunded": false,
-                "status": "paid"
-              }
+              "factor": 0.64
             },
             "ok": true,
             "output": {
-              "active_customers": 93
+              "emissions_t": 64.0,
+              "kwh": 100000,
+              "factor": 0.64
             }
           },
           {
             "name": "submit_answer",
             "input": {
-              "active_customers": 93,
-              "filter_used": {
-                "refunded": false,
-                "status": "paid"
-              },
+              "emissions_t": 64.0,
+              "factor_used": 0.64,
               "memory_ids_used": [
-                "mem_acme_active_customers.compact"
+                "mem_acme_scope2.compact"
               ],
               "policy_version": 2
             },
@@ -912,11 +832,11 @@
             "output": {}
           }
         ],
-        "memory_tokens_estimate": 122,
+        "memory_tokens_estimate": 133,
         "expected_action": true,
         "pointers": [
-          "pol_acme_active_customers_v2",
-          "run:run_8284efd2be"
+          "pol_acme_scope2_electricity_v2",
+          "run:run_1d015cecb1"
         ],
         "pointers_resolve": true
       }

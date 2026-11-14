@@ -8,7 +8,7 @@ from . import gate
 from .compress import compress
 from .config import METRIC, VECTOR_INDEX, RequestContext, now
 from .embeddings import cosine
-from .tools import Tools, canonical_filter
+from .tools import CALC, Tools, canonical_filter
 
 
 def require_policy_match(policy, flt, tenant_id, action):
@@ -102,10 +102,10 @@ class MemoryStore:
     def remember_run(self, ctx, memory_id, trace, run_id, summary, approved_by):
         """Compress a verified run and store it as an approved memory."""
         policy = self.db.policies.find_one({"tenant_id": ctx.tenant_id, "metric": METRIC, "active": True})
-        counts = [c for c in trace if c["name"] == "run_count_query" and c["ok"]]
-        if not counts:
-            raise ValueError("save rejected: no successful run_count_query in the run")
-        require_policy_match(policy, counts[-1]["input"]["filter"], ctx.tenant_id, "save")
+        calcs = [c for c in trace if c["name"] == CALC and c["ok"]]
+        if not calcs:
+            raise ValueError(f"save rejected: no successful {CALC} in the run")
+        require_policy_match(policy, calcs[-1]["input"], ctx.tenant_id, "save")
         return self.create_memory(ctx, memory_id, compress(trace, policy, run_id), summary, approved_by)
 
     def correct_memory(self, memory_id, new_filter, actor, reason):
@@ -117,7 +117,7 @@ class MemoryStore:
         tools = Tools(self.db, owner)
         policy = tools.current_policy()
         require_policy_match(policy, new_filter, owner.tenant_id, "correction")   # before any write
-        tools.call("run_count_query", {"filter": new_filter})          # verification run
+        tools.call(CALC, dict(new_filter))                              # verification run
         if not tools.calls[-1]["ok"]:
             raise ValueError(f"correction failed verification: {tools.calls[-1]['output']}")
         run_id = f"correction:{memory_id}:v{old['version'] + 1}"

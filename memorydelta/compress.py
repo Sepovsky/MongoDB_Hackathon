@@ -3,28 +3,32 @@ Deterministic. Machine-critical values (filters, IDs, versions) are copied verba
 import json
 import re
 
-from .config import METRIC
+from .config import METRIC, PERIOD
+from .tools import CALC
 
 
 def compress(trace, policy, run_id):
     """trace: list of executed tool calls. policy: the authoritative policy doc at run time."""
-    counts = [c for c in trace if c["name"] == "run_count_query" and c["ok"]]
-    if not counts:
-        raise ValueError("no successful run_count_query in trace; nothing verified to remember")
-    final = counts[-1]  # the query the answer depended on; earlier attempts are dropped
-    flt = final["input"]["filter"]
+    calcs = [c for c in trace if c["name"] == CALC and c["ok"]]
+    if not calcs:
+        raise ValueError(f"no successful {CALC} in trace; nothing verified to remember")
+    final = calcs[-1]  # the calculation the answer depended on; earlier attempts are dropped
+    flt = dict(final["input"])  # calculation parameters, e.g. {"factor": 0.66}
     return {
-        "goal": "count_active_customers",
-        "plan": [f"read policy {policy['_id']} (v{policy['version']})",
-                 "count distinct customer_id in orders for 2026-10 using verified_filter"],
+        "goal": "scope2_electricity_emissions",
+        "plan": [f"read emission factor {policy['_id']} (v{policy['version']}, {policy['framework']} "
+                 f"{policy['region']} {policy['period']})",
+                 f"sum site kWh for {PERIOD} and multiply by the verified factor"],
         "critical_evidence": {
-            "collection": "orders",
-            "fields": sorted({"customer_id", "order_date", *flt.keys()}),
+            "collection": "usage",
+            "fields": ["kwh", "month", "site_id"],
             "verified_filter_json": json.dumps(flt, sort_keys=True),
-            "result": final["output"]["active_customers"],
+            "result": final["output"]["emissions_t"],
+            "kwh": final["output"]["kwh"],
             "source_ids": [policy["_id"], f"run:{run_id}"],
         },
-        "assumptions": ["window = 2026-10-01..2026-10-31 UTC", "count distinct customer_id"],
+        "assumptions": [f"reporting period {PERIOD} = 1 Jul 2025 to 30 Jun 2026",
+                        "location-based Scope 2, kg CO2e/kWh, result in tonnes"],
         "dependencies": {"policy_key": METRIC, "policy_version": policy["version"],
                          "policy_doc_id": policy["_id"]},
     }
@@ -35,7 +39,7 @@ def render_compact(doc):
     c = doc["content"]
     ev = c["critical_evidence"]
     return {"memory_id": doc["memory_id"], "version": doc["version"], "goal": c["goal"],
-            "plan": c["plan"], "verified_filter": json.loads(ev["verified_filter_json"]),
+            "plan": c["plan"], "verified_params": json.loads(ev["verified_filter_json"]),
             "verified_result": ev.get("result"), "policy_version": c["dependencies"]["policy_version"],
             "source_ids": ev.get("source_ids", []), "assumptions": c.get("assumptions", [])}
 

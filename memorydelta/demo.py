@@ -20,8 +20,13 @@ from .seed import activate_policy, seed
 from .store import MemoryStore
 
 con = Console()
-MEM = "mem_acme_active_customers"
-V2_FILTER = {"status": "paid", "refunded": False}
+MEM = "mem_acme_scope2"
+V1 = {"factor": 0.66}   # NGER NSW 2024-25
+V2 = {"factor": 0.64}   # NGER NSW 2025-26
+
+
+def close(x, y):
+    return isinstance(x, (int, float)) and abs(x - y) <= 0.001
 
 
 def fmt_sent(r):
@@ -37,12 +42,12 @@ def fmt_calls(r):
 
 
 def answer(r):
-    return r.decision["active_customers"] if r.decision else f"no answer ({r.stop_reason})"
+    return r.decision["emissions_t"] if r.decision else f"no answer ({r.stop_reason})"
 
 
 def run_table(title, rows):
     t = Table(title=title, show_lines=True, title_justify="left")
-    for col in ("who / arm", "memory sent to model", "blocked (reason)", "tool calls executed", "answer", "check"):
+    for col in ("who / arm", "memory sent to model", "blocked (reason)", "tool calls executed", "t CO2e", "check"):
         t.add_column(col, overflow="fold")
     for label, r, ok in rows:
         t.add_row(label, fmt_sent(r), fmt_blocked(r), fmt_calls(r), str(answer(r)),
@@ -54,10 +59,10 @@ def summary(r):
     out = {k: getattr(r, k) for k in ("run_id", "tenant_id", "memory_mode", "included", "rejected", "candidates",
                                       "decision", "decision_evidence", "first_input_tokens",
                                       "total_input_tokens", "token_source", "model", "stop_reason")}
-    # Executed calls with compact outputs (counts and policy versions; schema samples dropped).
+    # Executed calls with compact outputs (emissions, kWh, factor, policy version; usage samples dropped).
     out["tool_calls"] = [{"name": c["name"], "input": c["input"], "ok": c["ok"],
                           "output": {k: v for k, v in (c["output"] or {}).items()
-                                     if k in ("active_customers", "version", "policy_id", "error")}}
+                                     if k in ("emissions_t", "kwh", "factor", "version", "policy_id", "error")}}
                          for c in r.trace]
     return out
 
@@ -81,7 +86,7 @@ def main(argv=None):
     ana, gus, ivy = (authenticate(s) for s in ("sess_acme_ana", "sess_globex_gus", "sess_initech_ivy"))
 
     # 1. Tenant isolation ------------------------------------------------------------------------
-    con.rule("1 · Tenant isolation (tenant comes from the session, not the prompt)")
+    con.rule("1 · Company isolation (company comes from the session, not the prompt)")
     a = run_agent(store, model, ana, TASK, scenario="isolation")
     g = run_agent(store, model, gus, TASK, scenario="isolation")
     i = run_agent(store, model, ivy, TASK, scenario="isolation")
@@ -89,7 +94,7 @@ def main(argv=None):
     leaked = [m for m in leak.included if not m["memory_id"].startswith("mem_acme")]
     run_table("governed retrieval vs unscoped baseline", [
         ("acme/ana · governed", a, [m["memory_id"] for m in a.included] == [MEM]),
-        ("globex/gus · governed", g, [m["memory_id"] for m in g.included] == ["mem_globex_active_customers"]),
+        ("globex/gus · governed", g, [m["memory_id"] for m in g.included] == ["mem_globex_scope2"]),
         ("initech/ivy · governed (no memories)", i, not i.included and i.decision is not None),
         ("acme/ana · UNSCOPED baseline", leak, False if leaked else True),
     ])
@@ -99,17 +104,17 @@ def main(argv=None):
                                   "unscoped_baseline": summary(leak), "foreign_in_baseline": len(leaked)}
 
     # 2. Behavior change -------------------------------------------------------------------------
-    con.rule("2 · Does approved memory change what the agent does?")
-    expected = {"none": "discovers first (get_policy / inspect_collection) before counting",
-                "governed": "first action is run_count_query with the memory's verified filter {}"}
+    con.rule("2 · Does an approved saved calculation change what the agent does?")
+    expected = {"none": "discovers first (get_emission_factor / inspect_usage) before calculating",
+                "governed": "first action is calculate_emissions with the memory's verified factor 0.66"}
     con.print("[bold]expected before running[/] (same task, model, settings and data; only memory differs):")
     for k, v in expected.items():
         con.print(f"  {k:9s} → {v}")
     off = run_agent(store, model, ana, TASK, memory_mode="none", scenario="behavior")
     on = run_agent(store, model, ana, TASK, memory_mode="governed", scenario="behavior")
-    off_ok = off.first_action in ("get_policy", "inspect_collection")
-    on_ok = bool(on.tool_calls) and on.tool_calls[0]["name"] == "run_count_query" and \
-        on.tool_calls[0]["input"].get("filter") == {}
+    off_ok = off.first_action in ("get_emission_factor", "inspect_usage")
+    on_ok = bool(on.tool_calls) and on.tool_calls[0]["name"] == "calculate_emissions" and \
+        on.tool_calls[0]["input"] == V1
     run_table("observed", [("acme · no memory", off, off_ok), ("acme · approved memory", on, on_ok)])
     con.print(f"tool calls: no memory={len(off.tool_calls)} vs memory={len(on.tool_calls)} · "
               f"same answer: {answer(off) == answer(on)}")
@@ -117,19 +122,19 @@ def main(argv=None):
                                  "matched_expected": {"no_memory": off_ok, "memory": on_ok}}
 
     # 3. Policy change ---------------------------------------------------------------------------
-    con.rule("3 · Policy changes v1 → v2: the most similar memory is now stale")
+    con.rule("3 · New NGER factor table published: NSW 2024-25 0.66 → 2025-26 0.64; the saved calculation is stale")
     activate_policy(db, "acme", 2)
     stale = run_agent(store, model, ana, TASK, memory_mode="ungated", scenario="policy-change")
     gov = run_agent(store, model, ana, TASK, memory_mode="governed", scenario="policy-change")
-    run_table("same question, after the authorized policy update (correct answer: 93)", [
-        ("acme · UNGATED baseline", stale, answer(stale) == 93),
-        ("acme · MemoryDelta gate", gov, answer(gov) == 93),
+    run_table("same question, after the new factor table is activated (correct answer: 64 t)", [
+        ("acme · UNGATED baseline", stale, close(answer(stale), 64)),
+        ("acme · MemoryDelta gate", gov, close(answer(gov), 64)),
     ])
     out["scenes"]["policy_change"] = {"ungated": summary(stale), "governed": summary(gov)}
 
     # 4. Correction ------------------------------------------------------------------------------
     con.rule("4 · Correct the memory (new verified version; old one superseded)")
-    new = store.correct_memory(MEM, V2_FILTER, actor="acme_lead", reason="metric policy v2")
+    new = store.correct_memory(MEM, V2, actor="acme_lead", reason="NGER 2025-26 factor table")
     store.wait_searchable(ana, TASK, new["_id"])
     corr = run_agent(store, model, ana, TASK, scenario="correction")
     run_table("next run after correction", [
@@ -138,7 +143,7 @@ def main(argv=None):
 
     # 5. Revocation ------------------------------------------------------------------------------
     con.rule("5 · Revoke the memory (excluded from future runs; embedding + content scrubbed)")
-    n = store.revoke_memory(MEM, actor="acme_lead", reason="customer request")
+    n = store.revoke_memory(MEM, actor="acme_lead", reason="calculation withdrawn")
     rev = run_agent(store, model, ana, TASK, scenario="revocation")
     run_table(f"next run after revoking {n} version(s)", [
         ("acme · governed", rev, not rev.included and rev.decision is not None)])
@@ -152,7 +157,7 @@ def main(argv=None):
     content = compress(gov.trace, policy, gov.run_id)   # gov = acme's own authorized v2 run
     compact = render_compact({"memory_id": MEM + ".compact", "version": 1, "content": content})
     raw = render_raw(MEM + ".raw", 1, gov.trace,
-                     "Agent read the policy, inspected the orders schema and samples, then counted.")
+                     "Agent read the emission factor, inspected the site's electricity readings, then calculated.")
     t = Table(title="same model, task, data and governance; only the memory representation differs",
               title_justify="left")
     for col in ("representation", "memory tokens (est.)", "request input tokens", "expected action?",
@@ -162,8 +167,8 @@ def main(argv=None):
     for label, rep in (("raw trajectory", raw), ("compact", compact)):
         r = run_agent(store, model, ana, TASK, rendered_override=[rep], scenario=f"compression-{label}")
         first = r.tool_calls[0] if r.tool_calls else {}
-        exp = first.get("name") == "run_count_query" and first.get("input", {}).get("filter") == V2_FILTER \
-            and answer(r) == 93
+        exp = first.get("name") == "calculate_emissions" and first.get("input") == V2 \
+            and close(answer(r), 64)
         ptrs = evidence_pointers(rep)
         resolved = all((db.runs if p.startswith("run:") else db.policies).find_one(
             {"_id": p[4:] if p.startswith("run:") else p}) for p in ptrs) and bool(ptrs)

@@ -1,4 +1,4 @@
-"""Correction, revocation, expiry and stale-policy rejection, checked on the model payload and trace."""
+"""Correction, revocation, expiry and stale-factor rejection, checked on the model payload and trace."""
 import json
 from datetime import timedelta
 
@@ -7,8 +7,9 @@ from memorydelta.config import TASK, authenticate, now
 from memorydelta.model import memories_in_payload
 from memorydelta.seed import activate_policy
 
-MEM = "mem_acme_active_customers"
-V2_FILTER = {"status": "paid", "refunded": False}
+MEM = "mem_acme_scope2"
+V1 = {"factor": 0.66}
+V2 = {"factor": 0.64}
 ALLOWED_TRACE_KEYS = {"_id", "memory_id", "version", "reason"}
 
 
@@ -16,38 +17,38 @@ def _sent(r):
     return [(m["memory_id"], m["version"]) for m in memories_in_payload(r.payloads[0])]
 
 
-def test_stale_policy_rejected_and_agent_replans(store, model):
+def test_stale_factor_rejected_and_agent_recalculates(store, model):
     activate_policy(store.db, "acme", 2)
     r = run_agent(store, model, authenticate("sess_acme_ana"), TASK)
     assert _sent(r) == []
     assert r.rejected[0]["reason"].startswith("policy_version_mismatch(memory=v1, current=v2)")
-    assert r.decision["active_customers"] == 93
-    ran = [c["input"]["filter"] for c in r.tool_calls if c["name"] == "run_count_query"]
-    assert {} not in ran                      # the stale v1 filter was never executed
+    assert r.decision["emissions_t"] == 64.0
+    ran = [c["input"] for c in r.tool_calls if c["name"] == "calculate_emissions"]
+    assert V1 not in ran                      # the stale 2024-25 factor was never executed
 
     stale = run_agent(store, model, authenticate("sess_acme_ana"), TASK, memory_mode="ungated")
-    assert stale.decision["active_customers"] == 120   # ungated baseline gives the stale answer
+    assert stale.decision["emissions_t"] == 66.0   # ungated baseline gives the stale answer
 
 
 def test_correction_sends_only_replacement(store, model):
     activate_policy(store.db, "acme", 2)
-    new = store.correct_memory(MEM, V2_FILTER, actor="acme_lead", reason="policy v2")
-    assert new["version"] == 2 and new["content"]["critical_evidence"]["result"] == 93
+    new = store.correct_memory(MEM, V2, actor="acme_lead", reason="factor table 2025-26")
+    assert new["version"] == 2 and new["content"]["critical_evidence"]["result"] == 64.0
     r = run_agent(store, model, authenticate("sess_acme_ana"), TASK)
     assert _sent(r) == [(MEM, 2)]
     assert r.included == [{"_id": f"{MEM}@v2", "memory_id": MEM, "version": 2}]
     assert {"memory_id": MEM, "version": 1, "reason": "status_superseded"}.items() <= r.rejected[0].items()
-    assert r.decision["active_customers"] == 93 and r.decision["filter_used"] == V2_FILTER
+    assert r.decision["emissions_t"] == 64.0 and r.decision["factor_used"] == 0.64
     assert store.db.memory_deltas.count_documents({"memory_id": MEM, "from_version": 1, "to_version": 2}) == 1
 
 
 def test_revocation_excludes_every_version(store, model):
     activate_policy(store.db, "acme", 2)
-    store.correct_memory(MEM, V2_FILTER, actor="acme_lead", reason="policy v2")
+    store.correct_memory(MEM, V2, actor="acme_lead", reason="factor table 2025-26")
     assert store.revoke_memory(MEM, actor="acme_lead", reason="customer request") == 2
     r = run_agent(store, model, authenticate("sess_acme_ana"), TASK)
     assert _sent(r) == [] and r.included == []
-    assert r.decision["active_customers"] == 93          # still answers via a fresh plan
+    assert r.decision["emissions_t"] == 64.0          # still answers via a fresh calculation
     for d in store.db.memories.find({"memory_id": MEM}):
         assert d["status"] == "revoked"
         assert not {"content", "embedding", "summary"} & d.keys()
@@ -73,7 +74,7 @@ def test_trace_never_contains_rejected_content(store, model):
     r = run_agent(store, model, authenticate("sess_acme_ana"), TASK)
     run = store.db.runs.find_one({"_id": r.run_id})
     assert run["rejected"] and all(set(x) <= ALLOWED_TRACE_KEYS for x in run["rejected"])
-    assert "verified_filter" not in json.dumps(run["rejected"], default=str)
+    assert "verified_params" not in json.dumps(run["rejected"], default=str)
 
 
 def test_incomplete_evidence_rejected(store, model):
