@@ -174,3 +174,12 @@ def test_run_record_stores_verified_metadata(store, model):
     run = store.db.runs.find_one({"_id": r.run_id})
     assert run["decision_evidence"]["policy_version_source"] == f"memory:{MEM}"
     assert run["decision_evidence"]["memory_ids_used"] == [MEM]
+
+
+def test_two_versions_of_same_memory_both_count_as_evidence(store):
+    """Ungated baselines can see v1 and v2 of one memory; citing it with v1's filter must verify."""
+    ev = [{"memory_id": MEM, "policy_version": 1, "filter": {}},
+          {"memory_id": MEM, "policy_version": 2, "filter": V2_FILTER}]
+    t = Tools(store.db, authenticate("sess_acme_ana"), memory_evidence=ev)
+    t.call("run_count_query", {"filter": {}})
+    assert _submit(t)["verified_against"]["policy_version"] == 1

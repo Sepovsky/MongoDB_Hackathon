@@ -130,7 +130,9 @@ class Tools:
                             f"{last['output']['active_customers']}")
 
         memory_ids_used = list(memory_ids_used or [])
-        provided = {m["memory_id"]: m for m in self.memory_evidence}
+        provided = {}                     # memory_id -> every provided version's evidence
+        for m in self.memory_evidence:
+            provided.setdefault(m["memory_id"], []).append(m)
         unknown = [m for m in memory_ids_used if m not in provided]
         if unknown:
             raise ToolError(f"memory_ids_used contains IDs not provided in this run: {unknown}; "
@@ -139,7 +141,7 @@ class Tools:
         # Evidence that ties a policy version to a filter: get_policy results, and cited memories.
         evidence = [(c["output"]["version"], c["output"]["filter"], "get_policy")
                     for c in self.calls if c["name"] == "get_policy" and c["ok"]]
-        evidence += [(provided[m]["policy_version"], provided[m]["filter"], f"memory:{m}") for m in memory_ids_used]
+        evidence += [(e["policy_version"], e["filter"], f"memory:{m}") for m in memory_ids_used for e in provided[m]]
         if not evidence:
             if policy_version is not None:
                 raise ToolError("policy_version must be null when no get_policy result or cited memory "

@@ -36,8 +36,8 @@ def render_compact(doc):
     ev = c["critical_evidence"]
     return {"memory_id": doc["memory_id"], "version": doc["version"], "goal": c["goal"],
             "plan": c["plan"], "verified_filter": json.loads(ev["verified_filter_json"]),
-            "verified_result": ev["result"], "policy_version": c["dependencies"]["policy_version"],
-            "source_ids": ev["source_ids"], "assumptions": c["assumptions"]}
+            "verified_result": ev.get("result"), "policy_version": c["dependencies"]["policy_version"],
+            "source_ids": ev.get("source_ids", []), "assumptions": c.get("assumptions", [])}
 
 
 def render_raw(memory_id, version, trace, narration):

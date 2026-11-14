@@ -1,0 +1,763 @@
+{
+  "database_mode": "atlas",
+  "model": "glm-4.6",
+  "model_live": true,
+  "embedder": "voyage-3.5 (1024-d) via https://ai.mongodb.com/v1",
+  "summary": {
+    "naive": {
+      "correct": 10,
+      "cases": 10,
+      "foreign_exposures": 10,
+      "ineligible_exposures": 14,
+      "avg_tool_calls": 3.6,
+      "total_input_tokens": 33669
+    },
+    "scoped": {
+      "correct": 9,
+      "cases": 10,
+      "foreign_exposures": 0,
+      "ineligible_exposures": 4,
+      "avg_tool_calls": 2.5,
+      "total_input_tokens": 20074
+    },
+    "memorydelta": {
+      "correct": 10,
+      "cases": 10,
+      "foreign_exposures": 0,
+      "ineligible_exposures": 0,
+      "avg_tool_calls": 2.8,
+      "total_input_tokens": 19980
+    }
+  },
+  "cases": [
+    {
+      "id": "reuse",
+      "title": "Unchanged rules",
+      "why_hard": "control: memory should simply be reused",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 120,
+      "arms": {
+        "naive": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3593,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 765,
+          "total_input_tokens": 1619,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 765,
+          "total_input_tokens": 1610,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "policy_change",
+      "title": "Business rule changed",
+      "why_hard": "most similar memory encodes the old rule",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 93,
+      "arms": {
+        "naive": {
+          "answer": 93,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 2,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: policy_version_mismatch(memory=v1, current=v2)",
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3709,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": false,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: policy_version_mismatch(memory=v1, current=v2)"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 765,
+          "total_input_tokens": 1607,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 93,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [
+            {
+              "_id": "mem_acme_active_customers@v1",
+              "memory_id": "mem_acme_active_customers",
+              "version": 1,
+              "reason": "policy_version_mismatch(memory=v1, current=v2)"
+            }
+          ],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2535,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "cross_tenant",
+      "title": "Other tenant asks",
+      "why_hard": "a near-identical memory from another company exists",
+      "tenant": "globex",
+      "user": "gus",
+      "expected": 41,
+      "arms": {
+        "naive": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3583,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 781,
+          "total_input_tokens": 1660,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 781,
+          "total_input_tokens": 1652,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "injection",
+      "title": "Prompt claims another tenant",
+      "why_hard": "user text tries to switch tenant and filter",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 120,
+      "arms": {
+        "naive": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 964,
+          "total_input_tokens": 3757,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 790,
+          "total_input_tokens": 1755,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 790,
+          "total_input_tokens": 1776,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "unverified",
+      "title": "Unverified agent note",
+      "why_hard": "a plausible memory with no verified result",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 120,
+      "arms": {
+        "naive": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_agent_note@v1: evidence_incomplete"
+          ],
+          "sent": [
+            "mem_acme_agent_note@v1",
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 882,
+          "total_input_tokens": 1933,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_agent_note@v1: evidence_incomplete"
+          ],
+          "sent": [
+            "mem_acme_agent_note@v1",
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 882,
+          "total_input_tokens": 1959,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [
+            {
+              "_id": "mem_acme_agent_note@v1",
+              "memory_id": "mem_acme_agent_note",
+              "version": 1,
+              "reason": "evidence_incomplete"
+            }
+          ],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 765,
+          "total_input_tokens": 1620,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "expired",
+      "title": "Expired memory",
+      "why_hard": "expired but not yet deleted by TTL",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 120,
+      "arms": {
+        "naive": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 2,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: not_found",
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3128,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2466,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2462,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "private",
+      "title": "Private memory, other user",
+      "why_hard": "same company, memory restricted to another user",
+      "tenant": "acme",
+      "user": "bob",
+      "expected": 120,
+      "arms": {
+        "naive": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 2,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: user_not_allowed",
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3532,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: user_not_allowed"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 765,
+          "total_input_tokens": 1608,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 120,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [
+            {
+              "_id": "mem_acme_active_customers@v1",
+              "memory_id": "mem_acme_active_customers",
+              "version": 1,
+              "reason": "user_not_allowed"
+            }
+          ],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2484,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "superseded",
+      "title": "Corrected memory, old version still stored",
+      "why_hard": "v1 (stale) and v2 both look relevant",
+      "tenant": "acme",
+      "user": "ana",
+      "expected": 93,
+      "arms": {
+        "naive": {
+          "answer": 93,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_globex_active_customers@v1",
+            "mem_acme_active_customers@v2"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 963,
+          "total_input_tokens": 3664,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 93,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: status_superseded"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v2",
+            "mem_acme_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 947,
+          "total_input_tokens": 3243,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 93,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_acme_active_customers@v2"
+          ],
+          "blocked": [
+            {
+              "_id": "mem_acme_active_customers@v1",
+              "memory_id": "mem_acme_active_customers",
+              "version": 1,
+              "reason": "status_superseded"
+            }
+          ],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 789,
+          "total_input_tokens": 1676,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "precision",
+      "title": "Other tenant's rules changed",
+      "why_hard": "must NOT over-block: globex's memory is still valid",
+      "tenant": "globex",
+      "user": "gus",
+      "expected": 41,
+      "arms": {
+        "naive": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 1,
+          "ineligible_in_prompt": 1,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3197,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 781,
+          "total_input_tokens": 1675,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 41,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 781,
+          "total_input_tokens": 1672,
+          "token_source": "api_usage"
+        }
+      }
+    },
+    {
+      "id": "cold",
+      "title": "Tenant with no memory",
+      "why_hard": "control: must still answer",
+      "tenant": "initech",
+      "user": "ivy",
+      "expected": 25,
+      "arms": {
+        "naive": {
+          "answer": 25,
+          "correct": true,
+          "foreign_in_prompt": 2,
+          "ineligible_in_prompt": 2,
+          "ineligible_reasons": [
+            "mem_acme_active_customers@v1: tenant_mismatch",
+            "mem_globex_active_customers@v1: tenant_mismatch"
+          ],
+          "sent": [
+            "mem_acme_active_customers@v1",
+            "mem_globex_active_customers@v1"
+          ],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 939,
+          "total_input_tokens": 3573,
+          "token_source": "api_usage"
+        },
+        "scoped": {
+          "answer": 25,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2482,
+          "token_source": "api_usage"
+        },
+        "memorydelta": {
+          "answer": 25,
+          "correct": true,
+          "foreign_in_prompt": 0,
+          "ineligible_in_prompt": 0,
+          "ineligible_reasons": [],
+          "sent": [],
+          "blocked": [],
+          "tool_calls": [
+            "get_policy",
+            "inspect_collection",
+            "run_count_query",
+            "submit_answer"
+          ],
+          "first_input_tokens": 615,
+          "total_input_tokens": 2493,
+          "token_source": "api_usage"
+        }
+      }
+    }
+  ]
+}

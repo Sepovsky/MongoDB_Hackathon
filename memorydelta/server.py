@@ -10,6 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results" / "comparison.json"
+BENCH = ROOT / "results" / "bench.json"
 UI = ROOT / "ui" / "index.html"
 state = {"running": False, "started_at": None, "finished_at": None, "exit_code": None}
 lock = threading.Lock()
@@ -39,6 +40,10 @@ class Handler(BaseHTTPRequestHandler):
             if not RESULTS.exists():
                 return self._send(404, {"error": "no results yet; run the demo"})
             return self._send(200, RESULTS.read_bytes())
+        if self.path == "/api/bench":
+            if not BENCH.exists():
+                return self._send(404, {"error": "no benchmark yet; run python -m memorydelta.bench"})
+            return self._send(200, BENCH.read_bytes())
         if self.path == "/api/status":
             with lock:
                 return self._send(200, state)

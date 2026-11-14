@@ -73,6 +73,18 @@
   .bars { display: grid; grid-template-columns: 140px 1fr 70px; gap: 8px 10px; align-items: center; font-size: 13px; }
   .bar { height: 16px; border-radius: 4px; background: var(--grey); width: 0; transition: width .8s ease; }
   .bar.g { background: var(--green); }
+  .score { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .score th, .score td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
+  .score th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .score td.case b { display: block; font-size: 15px; }
+  .score td.case span { color: var(--muted); font-size: 12px; }
+  .cell-ans { font-weight: 700; font-size: 18px; }
+  .cell-ans.good { color: var(--green); } .cell-ans.bad { color: var(--red); }
+  .cell-sub { font-size: 12px; color: var(--muted); }
+  .cell-sub.bad { color: var(--red); }
+  .tot { display: flex; gap: 14px; flex-wrap: wrap; margin: 6px 0 14px; }
+  .tot .card { flex: 1 1 260px; }
+  .tot .big { font-size: 34px; font-weight: 700; }
   .controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }
   .status { color: var(--muted); font-size: 13px; }
   .empty { padding: 40px; color: var(--muted); }
@@ -227,7 +239,34 @@ function laneHTML(L) {
   </div></div>`;
 }
 
+let bench = null;
+const ARM_LABEL = { naive: "Plain RAG memory", scoped: "Tenant-scoped, no checks", memorydelta: "MemoryDelta" };
+
+function renderBench() {
+  document.querySelectorAll("nav button").forEach((b, i) => b.classList.toggle("active", i === SCENES.length));
+  const m = document.getElementById("main");
+  if (!bench) { m.innerHTML = `<div class="empty">No benchmark yet. Run <code>python -m memorydelta.bench</code>.</div>`; return; }
+  const arms = Object.keys(bench.summary);
+  const tot = arms.map(a => { const s = bench.summary[a]; const bad = s.foreign_exposures + s.ineligible_exposures;
+    return `<div class="card"><h3>${ARM_LABEL[a] || a}</h3>
+      <div class="big" style="color:${s.correct === s.cases && !bad ? "var(--green)" : "var(--red)"}">${s.correct}/${s.cases} correct${bad ? ", leaky" : ""}</div>
+      <p style="font-size:14px;margin-top:6px">foreign memories in prompt: <b style="color:${s.foreign_exposures ? "var(--red)" : "var(--green)"}">${s.foreign_exposures}</b>
+      · ineligible memories in prompt: <b style="color:${s.ineligible_exposures ? "var(--red)" : "var(--green)"}">${s.ineligible_exposures}</b>
+      · avg tool calls ${s.avg_tool_calls}</p></div>`; }).join("");
+  const rows = bench.cases.map(c => `<tr><td class="case"><b>${esc(c.title)}</b><span>${esc(c.why_hard)} · ${esc(c.tenant)}/${esc(c.user)} · truth ${c.expected}</span></td>` +
+    arms.map(a => { const r = c.arms[a]; const bad = r.ineligible_in_prompt;
+      return `<td><div class="cell-ans ${r.correct ? "good" : "bad"}">${r.answer ?? "—"} ${r.correct ? "✓" : "✕"}</div>
+        <div class="cell-sub ${bad ? "bad" : ""}">${bad ? `${bad} bad memor${bad === 1 ? "y" : "ies"} in prompt` : "clean prompt"}${r.foreign_in_prompt ? ` · ${r.foreign_in_prompt} foreign` : ""}</div>
+        <div class="cell-sub">${r.tool_calls.length} tool calls</div></td>`; }).join("") + `</tr>`).join("");
+  m.innerHTML = `<div class="scene-head"><h2>Hard cases</h2><div class="question">same model (${esc(bench.model)}), data and task for every arm · truth computed from the data</div></div>
+    <div class="setup">“Bad memory in prompt” = a memory the gate would reject (other tenant, other user, superseded, expired, unverified, or built on an old rule) that still reached the model.</div>
+    <div class="tot">${tot}</div>
+    <table class="score"><tr><th>Case</th>${arms.map(a => `<th>${ARM_LABEL[a] || a}</th>`).join("")}</tr>${rows}</table>
+    <div class="hint">data: results/bench.json · python -m memorydelta.bench</div>`;
+}
+
 function render() {
+  if (current === SCENES.length) return renderBench();
   const S = SCENES[current], s = data.scenes;
   document.querySelectorAll("nav button").forEach((b, i) => b.classList.toggle("active", i === current));
   const insight = (S.insight ? S.insight(s) : []).map(([h, p]) => `<div class="card"><h3>${h}</h3><p>${p}</p></div>`).join("");
@@ -265,6 +304,8 @@ async function load() {
   const res = await fetch("/api/results", { cache: "no-store" });
   if (!res.ok) { document.getElementById("main").innerHTML = `<div class="empty">No results yet. Click “Run live on Atlas”.</div>`; return; }
   data = await res.json();
+  const b = await fetch("/api/bench", { cache: "no-store" });
+  bench = b.ok ? await b.json() : null;
   chips();
   render();
 }
@@ -286,15 +327,16 @@ async function runLive() {
   }, 2000);
 }
 
-document.getElementById("tabs").innerHTML = SCENES.map((S, i) => `<button data-i="${i}">${S.tab}</button>`).join("");
+document.getElementById("tabs").innerHTML = SCENES.map((S, i) => `<button data-i="${i}">${S.tab}</button>`).join("")
+  + `<button data-i="${SCENES.length}">7 · Hard cases</button>`;
 document.getElementById("tabs").addEventListener("click", e => { if (e.target.dataset.i) { current = +e.target.dataset.i; render(); } });
 document.getElementById("replay").addEventListener("click", play);
 document.getElementById("runlive").addEventListener("click", runLive);
 document.addEventListener("keydown", e => {
   if (!data) return;
-  if (e.key === "ArrowRight") { current = Math.min(SCENES.length - 1, current + 1); render(); }
+  if (e.key === "ArrowRight") { current = Math.min(SCENES.length, current + 1); render(); }
   if (e.key === "ArrowLeft") { current = Math.max(0, current - 1); render(); }
-  if (e.key === " ") { e.preventDefault(); play(); }
+  if (e.key === " ") { e.preventDefault(); if (current < SCENES.length) play(); }
 });
 load();
 </script>

@@ -1,0 +1,20 @@
+─────────────────── MemoryDelta hard cases · db=atlas · model=glm-4.6 · embedder=voyage-3.5 (1024-d) via https://ai.mongodb.com/v1 ───────────────────
+Unchanged rules (truth 120) · naive=120 leak=1 bad=1 · scoped=120 leak=0 bad=0 · memorydelta=120 leak=0 bad=0
+Business rule changed (truth 93) · naive=93 leak=1 bad=2 · scoped=120 leak=0 bad=1 · memorydelta=93 leak=0 bad=0
+Other tenant asks (truth 41) · naive=41 leak=1 bad=1 · scoped=41 leak=0 bad=0 · memorydelta=41 leak=0 bad=0
+Prompt claims another tenant (truth 120) · naive=120 leak=1 bad=1 · scoped=120 leak=0 bad=0 · memorydelta=120 leak=0 bad=0
+Unverified agent note (truth 120) · naive=120 leak=0 bad=1 · scoped=120 leak=0 bad=1 · memorydelta=120 leak=0 bad=0
+Expired memory (truth 120) · naive=120 leak=1 bad=2 · scoped=120 leak=0 bad=0 · memorydelta=120 leak=0 bad=0
+Private memory, other user (truth 120) · naive=120 leak=1 bad=2 · scoped=120 leak=0 bad=1 · memorydelta=120 leak=0 bad=0
+Corrected memory, old version still stored (truth 93) · naive=93 leak=1 bad=1 · scoped=93 leak=0 bad=1 · memorydelta=93 leak=0 bad=0
+Other tenant's rules changed (truth 41) · naive=41 leak=1 bad=1 · scoped=41 leak=0 bad=0 · memorydelta=41 leak=0 bad=0
+Tenant with no memory (truth 25) · naive=25 leak=2 bad=2 · scoped=25 leak=0 bad=0 · memorydelta=25 leak=0 bad=0
+Scorecard (same model, data and tasks; only memory handling differs)                                                                
+┏━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃ arm         ┃ correct answers ┃ foreign memories in prompt ┃ ineligible memories in prompt ┃ avg tool calls ┃ total input tokens ┃
+┡━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ naive       │ 10/10           │ 10                         │ 14                            │ 3.6            │ 33669              │
+│ scoped      │ 9/10            │ 0                          │ 4                             │ 2.5            │ 20074              │
+│ memorydelta │ 10/10           │ 0                          │ 0                             │ 2.8            │ 19980              │
+└─────────────┴─────────────────┴────────────────────────────┴───────────────────────────────┴────────────────┴────────────────────┘
+───────────────────────────────────────────────────────────── results/bench.json written ─────────────────────────────────────────────────────────────

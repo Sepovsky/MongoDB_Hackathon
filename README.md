@@ -37,8 +37,28 @@ Everything is written to one dedicated database, `memorydelta_demo`, in collecti
 .venv/bin/python -m memorydelta.seed     # reset + seed the demo database, create vector/TTL indexes + validator
 .venv/bin/python -m pytest -q            # deterministic tests (+ live Atlas tests when MONGODB_URI is set)
 .venv/bin/python -m memorydelta.demo     # full demo; reseeds first; writes results/comparison.json
+.venv/bin/python -m memorydelta.bench    # 10 hard cases x 3 memory strategies; writes results/bench.json
 .venv/bin/python -m memorydelta.server   # flow viewer at http://localhost:8765
 ```
+
+### Hard-case benchmark
+
+`memorydelta.bench` runs 10 cases. Each case starts from a fresh seed and adds one complication: a changed
+business rule, another tenant asking, a prompt claiming another tenant, an unverified agent note, an
+expired memory, a memory private to another user, a superseded version still stored, another tenant's rule
+change (MemoryDelta must *not* over-block), plus two controls. Every case runs the same task with the same
+model and data under three strategies:
+
+| Arm | Memory handling |
+|---|---|
+| `naive` | top-k similar memories from any tenant, no checks (plain RAG memory) |
+| `scoped` | memories filtered to the tenant, no validity checks (a typical per-tenant memory store) |
+| `memorydelta` | tenant-filtered Vector Search, `_id` re-read, validation gate |
+
+Ground truth is computed from the data under the tenant's active policy. The scorecard reports correct
+answers, foreign memories in the prompt, and ineligible memories in the prompt (any memory the gate would
+reject that still reached the model), plus tool calls and input tokens. The viewer's **Hard cases** tab
+shows it. See [PITCH.md](PITCH.md) for the demo and pitch scripts.
 
 ### Flow viewer
 

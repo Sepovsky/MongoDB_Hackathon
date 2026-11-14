@@ -47,6 +47,7 @@ class RequestContext:
 # The model and the user's text never get to choose the tenant.
 SESSIONS = {
     "sess_acme_ana": RequestContext("acme", "ana"),
+    "sess_acme_bob": RequestContext("acme", "bob"),
     "sess_globex_gus": RequestContext("globex", "gus"),
     "sess_initech_ivy": RequestContext("initech", "ivy"),
 }
