@@ -29,17 +29,25 @@ No slides. The live flow viewer (`python -m memorydelta.server`, http://localhos
 
 **Stage notes:** ← → switch scenes, Space replays a scene's animation. Don't click *Run live on Atlas* on stage: a full run takes about 2 minutes. The viewer replays the last saved live results, so it also works without a network connection.
 
-## 1-minute video (viewer only; record it, then trim)
+## 1-minute video
 
-| Time | Screen | Voice-over |
+About 135 words, which takes about 55 seconds at a calm pace. Every number on screen is from the live Atlas + GLM-4.6 run.
+
+| Time | Screen (what you do) | Say |
 |---|---|---|
-| 0–10 s | Scene 0 | “An analyst asks for a site's FY2025-26 electricity emissions. A saved calculation is valid for a site, a framework and a year.” |
-| 10–22 s | Scene 1 | “MemoryDelta on MongoDB Atlas: each company gets only its own saved calculation. The unscoped baseline leaks another company's memory.” |
-| 22–40 s | Scene 3 | “The 2025-26 factor table is published. Memory without checks reuses last year's factor: 66 tonnes. MemoryDelta checks the factor version, refuses it, and recalculates 64.” |
-| 40–50 s | Scenes 4 → 5 | “Correct it and only the new version is used. Revoke it and no version is.” |
-| 50–60 s | Scene 7 | “Ten live hard cases: ten for ten, while both baselines reported the stale 66 tonnes. MemoryDelta: memory that knows which rule it was built for.” |
+| 0:00–0:08 | **Scene 0**, The question. Hold still. | “An AI analyst saved last year’s emissions calculation: 66 tonnes. This year’s factor makes it 64. A saved calculation is only valid for one site, one framework, one year.” |
+| 0:08–0:20 | Press **→** to scene 1, Isolation. Let the rows light up. | “MemoryDelta runs on MongoDB Atlas. The company comes from the login, Atlas Vector Search finds its saved calculations, and each company sees only its own.” |
+| 0:20–0:38 | Press **→ →** to scene 3, New factor table. Point at the red **66 t** and then the green **64 t**. | “Now the 2025–26 factor table is published. Memory without checks reuses last year’s calculation: 66 tonnes, wrong. MemoryDelta sees it was built with the old factor table, refuses it, and recalculates: 64.” |
+| 0:38–0:48 | Press **→** to scene 4, then **→** to scene 5. | “Correct the memory, and only the new version is used. Revoke it, and no version is.” |
+| 0:48–1:00 | Press **→ → →** to scene 7, Hard cases. Hold on the three scorecards. | “Ten live hard cases: both baselines reported the stale 66 tonnes. MemoryDelta: ten for ten, zero bad memories. Memory that knows which rule it was built for.” |
 
-Before uploading, check that the audio plays, the link opens in a logged-out window, and the video is under 60 seconds.
+**Recording on a Mac:**
+1. Start the viewer with `.venv/bin/python -m memorydelta.server` and open http://localhost:8765 in a full-width browser window (1440 px or wider), zoomed to 100%. Close other tabs and turn on Do Not Disturb.
+2. Press **Cmd+Shift+5**, choose *Record Selected Portion*, select the browser content area, and under *Options* pick your microphone.
+3. Each scene takes about 4 seconds to light up after you press →, so start speaking as you press. Press **Space** to replay a scene if you get ahead.
+4. Do one practice take, then record. If it runs over 60 seconds, trim the pauses at the start and end in QuickTime (*Edit → Trim*); don’t speed up the audio.
+
+**Before uploading:** check it’s under 60 seconds, the audio plays, the numbers are readable, and the link opens in a logged-out window.
 
 ## Likely questions
 
